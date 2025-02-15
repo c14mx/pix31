@@ -1,0 +1,1 @@
+Run `npm start` to scrape the icons.
