@@ -44,21 +44,22 @@ function toComponentName(filename: string): string {
     .join('');
 }
 
-function extractSVGPath(svgContent: string): string | null {
+async function extractSVGPath(svgContent: string): Promise<string | null> {
   try {
-    const parsed = parseSVG(svgContent);
+    const parsed = await parseSVG(svgContent);
     const pathElement = findPathElement(parsed);
-    if (pathElement && pathElement.properties) {
-      return pathElement.properties.d as string;
+    if (pathElement && pathElement.attributes) {
+      return pathElement.attributes.d;
     }
     return null;
   } catch (error) {
+    console.error('Failed to parse SVG:', error);
     return null;
   }
 }
 
 function findPathElement(node: any): any {
-  if (node.tagName === 'path') {
+  if (node.name === 'path') {
     return node;
   }
   if (node.children) {
@@ -108,7 +109,7 @@ export async function generateReactIcons(): Promise<GenerationStats> {
   for (const svgFile of svgFiles) {
     try {
       const svgContent = fs.readFileSync(path.join(svgDir, svgFile), 'utf-8');
-      const pathData = extractSVGPath(svgContent);
+      const pathData = await extractSVGPath(svgContent);
 
       if (!pathData) {
         throw new Error('Could not extract path data from SVG');

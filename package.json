@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "start": "ts-node src/index.ts",
-    "generate-icons": "ts-node src/generate-react-icons.ts"
+    "scrape": "ts-node src/index.ts",
+    "generate": "ts-node src/generate-react-icons.ts"
   },
   "name": "pixelarticons-scraper",
   "version": "1.0.0",
