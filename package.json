@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "generate-icons": "ts-node src/generate-react-icons.ts"
   },
   "name": "pixelarticons-scraper",
   "version": "1.0.0",
@@ -10,10 +11,12 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "enquirer": "^2.4.1",
     "fs-extra": "^11.3.0",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
-    "puppeteer": "^24.2.1"
+    "puppeteer": "^24.2.1",
+    "svgson": "^5.3.1"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
