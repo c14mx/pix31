@@ -6,7 +6,8 @@ import {
   toPascalCase,
   extractSVGPath,
   findAllPathElements,
-  searchRelatedFileNames
+  searchRelatedFileNames,
+  calculateSimilarity,
 } from "../utils";
 
 describe("convertNumberToWord(): ", () => {
@@ -262,7 +263,7 @@ describe("searchRelatedFileNames(): ", () => {
     "chevron-left",
     "arrow-down",
     "menu-alt",
-    "menu"
+    "menu",
   ];
 
   it("finds exact matches", () => {
@@ -295,5 +296,43 @@ describe("searchRelatedFileNames(): ", () => {
   it("handles hyphenated queries", () => {
     const results = searchRelatedFileNames("menu-alternative", testFiles);
     expect(results).toContain("menu-alt");
+  });
+
+  it("handles similar icon variations", () => {
+    const testIconFiles = [
+      "arrow-left",
+      "arrow-left-circle",
+      "arrow-left-square",
+      "double-arrow-left",
+      "chevron-left",
+    ];
+
+    const results = searchRelatedFileNames("arrow-left", testIconFiles);
+    expect(results).toContain("arrow-left");
+    expect(results).toContain("arrow-left-circle");
+    expect(results).toContain("arrow-left-square");
+    expect(results).not.toContain("chevron-left");
+  });
+});
+
+describe("calculateSimilarity(): ", () => {
+  it("returns high similarity for substring matches", () => {
+    expect(calculateSimilarity("menu", "menu-alt")).toBe(0.8);
+    expect(calculateSimilarity("arrow", "arrow-left")).toBe(0.8);
+  });
+
+  it("returns partial similarity for common words in hyphenated strings", () => {
+    expect(calculateSimilarity("arrow-right", "arrow-left")).toBeCloseTo(0.65);
+    expect(calculateSimilarity("menu-alt", "menu-alternative")).toBeCloseTo(0.8);
+  });
+
+  it("returns character-based similarity for strings with no common words", () => {
+    expect(calculateSimilarity("menu", "menue")).toBeCloseTo(0.8);
+    expect(calculateSimilarity("arrow", "below")).toBeLessThan(0.5);
+  });
+
+  it("handles case insensitive comparison", () => {
+    expect(calculateSimilarity("MENU", "menu-alt")).toBe(0.8);
+    expect(calculateSimilarity("Arrow-Left", "arrow-left")).toBe(0.8);
   });
 });

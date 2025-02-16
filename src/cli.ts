@@ -2,7 +2,7 @@
 
 import { Command } from "commander";
 import { listCommand } from "./commands/list";
-import { configureAddCommand } from "./commands/add";
+import { configureAddCommand } from "./lib/utils";
 
 const program = new Command();
 

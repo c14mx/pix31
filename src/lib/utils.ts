@@ -1,7 +1,11 @@
-import { NUMBER_WORDS } from "./constants";
-import { parse as parseSVG } from "svgson";
-import path from "path";
 import fs from "fs";
+import path from "path";
+import { Command } from "commander";
+import { parse as parseSVG } from "svgson";
+
+import { NUMBER_WORDS } from "./constants";
+import { addCommand } from "../commands/add";
+import { AddCLIOptions } from "./types";
 
 export function convertNumberToWord(name: string): string {
   if (/^\d/.test(name)) {
@@ -109,34 +113,43 @@ export function getSvgFiles(): string[] {
 
 export function searchRelatedFileNames(query: string, fileNames: string[], limit = 3): string[] {
   return fileNames
-    .map(name => ({
+    .map((name) => ({
       name,
-      score: calculateSimilarity(query, name)
+      score: calculateSimilarity(query, name),
     }))
-    .filter(item => item.score > 0.3) // Only show reasonably similar matches
+    .filter((item) => item.score > 0.3)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
-    .map(item => item.name);
+    .map((item) => item.name);
 }
 
-function calculateSimilarity(str1: string, str2: string): number {
+export function calculateSimilarity(str1: string, str2: string): number {
   const s1 = str1.toLowerCase();
   const s2 = str2.toLowerCase();
-  
-  // Check for substring matches
+
   if (s2.includes(s1) || s1.includes(s2)) return 0.8;
-  
-  // Check for word matches
-  const words1 = s1.split('-');
-  const words2 = s2.split('-');
-  const commonWords = words1.filter(w => words2.includes(w));
-  if (commonWords.length > 0) return 0.5 + (commonWords.length / Math.max(words1.length, words2.length) * 0.3);
-  
-  // Calculate character-based similarity
+
+  const words1 = s1.split("-");
+  const words2 = s2.split("-");
+  const commonWords = words1.filter((w) => words2.includes(w));
+  if (commonWords.length > 0)
+    return 0.5 + (commonWords.length / Math.max(words1.length, words2.length)) * 0.3;
+
   let matches = 0;
   const maxLength = Math.max(s1.length, s2.length);
   for (let i = 0; i < Math.min(s1.length, s2.length); i++) {
     if (s1[i] === s2[i]) matches++;
   }
   return matches / maxLength;
+}
+
+export function configureAddCommand(program: Command) {
+  program
+    .command("add [icons...]")
+    .description("Add icons to your project")
+    .option("--web", "Generate React Web components (default)")
+    .option("--native", "Generate React Native components")
+    .action(async (icons: string[], options: AddCLIOptions) => {
+      await addCommand(icons, options);
+    });
 }

@@ -3,3 +3,8 @@ export interface GenerationStats {
   successfulFiles: number;
   failedFiles: string[];
 }
+
+export interface AddCLIOptions {
+  web?: boolean;
+  native?: boolean;
+}
