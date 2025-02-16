@@ -1,13 +1,16 @@
 import fs from "fs";
 import path from "path";
-import { extractSVGPath, generateReactComponent, formatSvgFileNameToPascalCase } from "@lib/utils";
-import { GenerationStats } from "@lib/types";
+import {
+  extractSVGPath,
+  generateReactComponent,
+  formatSvgFileNameToPascalCase,
+} from "../lib/utils";
+import { GenerationStats } from "../lib/types";
 
 export async function generateReactIcons(): Promise<GenerationStats> {
   const stats: GenerationStats = {
-    totalSvgFiles: 0,
-    totalTsxGenerated: 0,
-    errorsCount: 0,
+    totalFiles: 0,
+    successfulFiles: 0,
     failedFiles: [],
   };
 
@@ -19,7 +22,7 @@ export async function generateReactIcons(): Promise<GenerationStats> {
   }
 
   const svgFiles = fs.readdirSync(svgDir).filter((file) => file.endsWith(".svg"));
-  stats.totalSvgFiles = svgFiles.length;
+  stats.totalFiles = svgFiles.length;
 
   for (const svgFile of svgFiles) {
     try {
@@ -35,9 +38,8 @@ export async function generateReactIcons(): Promise<GenerationStats> {
       const outputPath = path.join(outputDir, `${componentName}.tsx`);
 
       fs.writeFileSync(outputPath, componentContent);
-      stats.totalTsxGenerated++;
+      stats.successfulFiles++;
     } catch (error) {
-      stats.errorsCount++;
       stats.failedFiles.push(svgFile);
     }
   }
@@ -48,12 +50,8 @@ export async function generateReactIcons(): Promise<GenerationStats> {
 if (require.main === module) {
   generateReactIcons().then((stats) => {
     console.log("Generation Complete!");
-    console.log(`Total SVG files: ${stats.totalSvgFiles}`);
-    console.log(`Total TSX files generated: ${stats.totalTsxGenerated}`);
-    console.log(`Total errors: ${stats.errorsCount}`);
-    if (stats.failedFiles.length > 0) {
-      console.log("Failed files:");
-      stats.failedFiles.forEach((file) => console.log(`- ${file}`));
-    }
+    console.log(`Total files: ${stats.totalFiles}`);
+    console.log(`Successfully generated: ${stats.successfulFiles}`);
+    console.log(`Failed files: ${stats.failedFiles.length}`);
   });
 }

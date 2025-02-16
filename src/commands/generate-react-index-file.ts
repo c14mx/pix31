@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { toPascalCase } from "@lib/utils";
+import { toPascalCase } from "../lib/utils";
 
 export async function generateIndexFile(): Promise<void> {
   const reactIconsDir = path.resolve("react-icons");

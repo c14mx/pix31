@@ -1,18 +1,26 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "es2018",
     "module": "commonjs",
+    "lib": ["es2018", "dom"],
+    "declaration": true,
     "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "types": ["node", "jest"],
+    "baseUrl": ".",
     "paths": {
-      "@lib/*": ["./src/lib/*"],
-      "@commands/*": ["./src/commands/*"]
-    }
+      "@lib/*": ["./src/lib/*"]
+    },
+    "rootDir": "./src",
+    "moduleResolution": "node",
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "**/*.test.ts"]
 } 

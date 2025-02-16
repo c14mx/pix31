@@ -1,5 +1,13 @@
-import { convertNumberToWord, formatSvgFileNameToPascalCase, generateReactComponent, generateReactNativeComponent, toPascalCase } from "@lib/utils";
-import { extractSVGPath, findAllPathElements } from "@lib/utils";
+import {
+  convertNumberToWord,
+  formatSvgFileNameToPascalCase,
+  generateReactComponent,
+  generateReactNativeComponent,
+  toPascalCase,
+  extractSVGPath,
+  findAllPathElements,
+  searchRelatedFileNames
+} from "../utils";
 
 describe("convertNumberToWord(): ", () => {
   it("Replaces number prefix with NUMBER_WORDS", () => {
@@ -15,7 +23,7 @@ describe("convertNumberToWord(): ", () => {
     expect(convertNumberToWord("battery-2")).toBe("battery-2");
     expect(convertNumberToWord("volume-3")).toBe("volume-3");
   });
-}); 
+});
 
 describe("toPascalCase(): ", () => {
   it("Converts string to PascalCase", () => {
@@ -60,10 +68,7 @@ describe("extractSVGPath(): ", () => {
       </svg>
     `;
     const result = await extractSVGPath(svgContent);
-    expect(result).toEqual([
-      "M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z",
-      "M4 4h16v16H4z"
-    ]);
+    expect(result).toEqual(["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z", "M4 4h16v16H4z"]);
   });
 
   it("Extracts nested paths", async () => {
@@ -78,10 +83,7 @@ describe("extractSVGPath(): ", () => {
       </svg>
     `;
     const result = await extractSVGPath(svgContent);
-    expect(result).toEqual([
-      "M1 1h1v1h-1z",
-      "M2 2h2v2h-2z"
-    ]);
+    expect(result).toEqual(["M1 1h1v1h-1z", "M2 2h2v2h-2z"]);
   });
 
   it("Returns null when no path element exists", async () => {
@@ -99,11 +101,9 @@ describe("findAllPathElements(): ", () => {
   it("Finds path at root level", () => {
     const node = {
       name: "svg",
-      children: [
-        { name: "path", attributes: { d: "M1 1h1v1h-1z" } }
-      ]
+      children: [{ name: "path", attributes: { d: "M1 1h1v1h-1z" } }],
     };
-    
+
     const paths = findAllPathElements(node);
     expect(paths).toHaveLength(1);
     expect(paths[0].attributes.d).toBe("M1 1h1v1h-1z");
@@ -120,21 +120,19 @@ describe("findAllPathElements(): ", () => {
             { name: "path", attributes: { d: "M2 2h2v2h-2z" } },
             {
               name: "g",
-              children: [
-                { name: "path", attributes: { d: "M3 3h3v3h-3z" } }
-              ]
-            }
-          ]
-        }
-      ]
+              children: [{ name: "path", attributes: { d: "M3 3h3v3h-3z" } }],
+            },
+          ],
+        },
+      ],
     };
-    
+
     const paths = findAllPathElements(node);
     expect(paths).toHaveLength(3);
-    expect(paths.map(p => p.attributes.d)).toEqual([
+    expect(paths.map((p) => p.attributes.d)).toEqual([
       "M1 1h1v1h-1z",
       "M2 2h2v2h-2z",
-      "M3 3h3v3h-3z"
+      "M3 3h3v3h-3z",
     ]);
   });
 
@@ -145,13 +143,11 @@ describe("findAllPathElements(): ", () => {
         { name: "rect", attributes: { width: "100", height: "100" } },
         {
           name: "g",
-          children: [
-            { name: "circle", attributes: { r: "50" } }
-          ]
-        }
-      ]
+          children: [{ name: "circle", attributes: { r: "50" } }],
+        },
+      ],
     };
-    
+
     const paths = findAllPathElements(node);
     expect(paths).toHaveLength(0);
   });
@@ -159,9 +155,9 @@ describe("findAllPathElements(): ", () => {
   it("Handles node without children", () => {
     const node = {
       name: "rect",
-      attributes: { width: "100", height: "100" }
+      attributes: { width: "100", height: "100" },
     };
-    
+
     const paths = findAllPathElements(node);
     expect(paths).toHaveLength(0);
   });
@@ -171,7 +167,7 @@ describe("generateReactNativeComponent(): ", () => {
   it("Generates component with single path", () => {
     const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"];
     const result = generateReactNativeComponent("HomeIcon", pathData);
-    
+
     expect(result).toBe(`import React from 'react';
 import { Path } from 'react-native-svg';
 import { Icon, IconProps } from '../lib/icon';
@@ -191,12 +187,9 @@ HomeIcon.displayName = "HomeIcon";
   });
 
   it("Generates component with multiple paths", () => {
-    const pathData = [
-      "M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z",
-      "M4 4h16v16H4z"
-    ];
+    const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z", "M4 4h16v16H4z"];
     const result = generateReactNativeComponent("ComplexIcon", pathData);
-    
+
     expect(result).toBe(`import React from 'react';
 import { Path } from 'react-native-svg';
 import { Icon, IconProps } from '../lib/icon';
@@ -221,46 +214,86 @@ describe("generateReactComponent(): ", () => {
   it("Generates component with single path", () => {
     const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"];
     const result = generateReactComponent("HomeIcon", pathData);
-    
-    expect(result).toBe(`import React from 'react';
-import { HakoIcon, HakoIconProps } from '../lib/hako-icon';
 
-export const HomeIcon = React.forwardRef<SVGSVGElement, HakoIconProps>(({
+    expect(result).toBe(`import React from 'react';
+import { Icon, IconProps } from '../lib/icon';
+
+export const HomeIcon = React.forwardRef<SVGSVGElement, IconProps>(({
   ...props
 }, ref) => {
   return (
-    <HakoIcon ref={ref} {...props}>
+    <Icon ref={ref} {...props}>
       <path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z" fill="currentColor"/>
-    </HakoIcon>
+    </Icon>
   );
-}) as React.ForwardRefExoticComponent<HakoIconProps & React.RefAttributes<SVGSVGElement>>;
+}) as React.ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
 
 HomeIcon.displayName = "HomeIcon";
 `);
   });
 
   it("Generates component with multiple paths", () => {
-    const pathData = [
-      "M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z",
-      "M4 4h16v16H4z"
-    ];
+    const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z", "M4 4h16v16H4z"];
     const result = generateReactComponent("ComplexIcon", pathData);
-    
-    expect(result).toBe(`import React from 'react';
-import { HakoIcon, HakoIconProps } from '../lib/hako-icon';
 
-export const ComplexIcon = React.forwardRef<SVGSVGElement, HakoIconProps>(({
+    expect(result).toBe(`import React from 'react';
+import { Icon, IconProps } from '../lib/icon';
+
+export const ComplexIcon = React.forwardRef<SVGSVGElement, IconProps>(({
   ...props
 }, ref) => {
   return (
-    <HakoIcon ref={ref} {...props}>
+    <Icon ref={ref} {...props}>
       <path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z" fill="currentColor"/>
       <path d="M4 4h16v16H4z" fill="currentColor"/>
-    </HakoIcon>
+    </Icon>
   );
-}) as React.ForwardRefExoticComponent<HakoIconProps & React.RefAttributes<SVGSVGElement>>;
+}) as React.ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
 
 ComplexIcon.displayName = "ComplexIcon";
 `);
+  });
+});
+
+describe("searchRelatedFileNames(): ", () => {
+  const testFiles = [
+    "chevron-down",
+    "chevron-up",
+    "chevron-left",
+    "arrow-down",
+    "menu-alt",
+    "menu"
+  ];
+
+  it("finds exact matches", () => {
+    const results = searchRelatedFileNames("menu", testFiles);
+    expect(results).toContain("menu");
+  });
+
+  it("finds partial matches", () => {
+    const results = searchRelatedFileNames("chevron", testFiles);
+    expect(results).toContain("chevron-down");
+    expect(results).toContain("chevron-up");
+    expect(results).toContain("chevron-left");
+  });
+
+  it("finds similar matches", () => {
+    const results = searchRelatedFileNames("menue", testFiles);
+    expect(results).toContain("menu");
+  });
+
+  it("limits results to specified number", () => {
+    const results = searchRelatedFileNames("chevron", testFiles, 2);
+    expect(results.length).toBe(2);
+  });
+
+  it("returns empty array for no matches", () => {
+    const results = searchRelatedFileNames("xyz123", testFiles);
+    expect(results).toHaveLength(0);
+  });
+
+  it("handles hyphenated queries", () => {
+    const results = searchRelatedFileNames("menu-alternative", testFiles);
+    expect(results).toContain("menu-alt");
   });
 });

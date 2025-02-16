@@ -1,6 +1,5 @@
 export interface GenerationStats {
-  totalSvgFiles: number;
-  totalTsxGenerated: number;
-  errorsCount: number;
+  totalFiles: number;
+  successfulFiles: number;
   failedFiles: string[];
 }
