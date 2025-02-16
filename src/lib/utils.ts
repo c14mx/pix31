@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import chalk from "chalk";
 import { Command } from "commander";
-import { select } from "@clack/prompts";
+import { select, confirm, text } from "@clack/prompts";
 import { parse as parseSVG } from "svgson";
 
 import { addCommand } from "../commands/add";
@@ -118,7 +118,9 @@ ${componentName}.displayName = "${componentName}";
 }
 
 export function getSvgFiles(): string[] {
-  const svgDir = path.join(process.cwd(), "svg-icons");
+  const cliDir = path.join(__dirname, '../..');
+  const svgDir = path.join(cliDir, "svg-icons");
+  
   return fs
     .readdirSync(svgDir)
     .filter((file) => file.endsWith(".svg"))
@@ -179,20 +181,30 @@ export function readConfig(): JsonConfig | null {
 }
 
 export async function initializeConfig(): Promise<JsonConfig | null> {
-  const choice = await select({
-    message: "Would you like to add a config file?",
+  // Platform selection
+  const platformChoice = await select({
+    message: "Select your platform",
     options: [
-      { value: "web", label: `Yes (${PLATFORMS.web})` },
-      { value: "native", label: `Yes (${PLATFORMS.native})` },
-      { value: "no", label: "No" },
+      { value: "web", label: PLATFORMS.web },
+      { value: "native", label: PLATFORMS.native },
+      { value: "cancel", label: "Cancel" },
     ],
   });
 
-  if (choice === "no" || !choice) return null;
+  if (platformChoice === "cancel" || !platformChoice) return null;
+
+  // Output path selection
+  const outputPath = await text({
+    message: "Where would you like to save your icons?",
+    placeholder: DEFAULT_OUTPUT_PATH,
+    defaultValue: DEFAULT_OUTPUT_PATH,
+  });
+
+  if (!outputPath) return null;
 
   const config: JsonConfig = {
-    platform: choice as Platform,
-    outputPath: DEFAULT_OUTPUT_PATH,
+    platform: platformChoice as Platform,
+    outputPath: outputPath as string,
   };
 
   try {
@@ -222,7 +234,77 @@ export function ensureIndexFile(config: JsonConfig): void {
 
 export function appendIconExport(config: JsonConfig, iconName: string): void {
   const indexPath = path.join(process.cwd(), config.outputPath, INDEX_FILE_NAME);
-  const exportStatement = `export * from "./${iconName}";\n`;
+  const existingContent = fs.readFileSync(indexPath, 'utf-8');
+  const exportLine = `export * from "./${iconName}";`;
+  
+  // Check if export already exists, ignoring whitespace and newlines
+  const hasExport = existingContent
+    .split('\n')
+    .some(line => line.trim() === exportLine);
+  
+  if (!hasExport) {
+    // Add a newline before the export if the file is not empty and doesn't end with a newline
+    const needsNewline = existingContent.length > 0 && !existingContent.endsWith('\n');
+    const contentToAppend = needsNewline 
+      ? `\n${exportLine}\n` 
+      : `${exportLine}\n`;
+    
+    fs.appendFileSync(indexPath, contentToAppend);
+  }
+}
 
-  fs.appendFileSync(indexPath, exportStatement);
+export function iconFileExists(config: JsonConfig, iconName: string): boolean {
+  const outputDir = path.join(process.cwd(), config.outputPath);
+  const iconPath = path.join(outputDir, `${iconName}.tsx`);
+  return fs.existsSync(iconPath);
+}
+
+export async function promptOverride(componentName: string, filePath: string): Promise<boolean> {
+  const response = await confirm({
+    message: `Would you like to override /${componentName}.tsx`,
+  });
+
+  return response === true;
+}
+
+export async function generateIconComponent(
+  config: JsonConfig, 
+  iconName: string, 
+  svgFilePath: string
+): Promise<boolean> {
+  const outputDir = path.join(process.cwd(), config.outputPath);
+  const componentName = `${formatSvgFileNameToPascalCase(iconName)}Icon`;
+  
+  // Check if icon already exists
+  if (iconFileExists(config, iconName)) {
+    console.log(`${chalk.yellow("!")} ${componentName} already exists in ${config.outputPath}`);
+    const shouldOverride = await promptOverride(componentName, config.outputPath);
+    if (!shouldOverride) {
+      return false;
+    }
+  }
+
+  const svgContent = fs.readFileSync(svgFilePath, 'utf-8');
+  const pathData = await extractSVGPath(svgContent);
+  
+  if (!pathData) {
+    throw new Error(`Failed to extract path data from ${iconName}`);
+  }
+
+  const componentContent = config.platform === 'native' 
+    ? generateReactNativeComponent(componentName, pathData)
+    : generateReactComponent(componentName, pathData);
+
+  // Ensure the output directory exists
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  // Write the component file
+  fs.writeFileSync(
+    path.join(outputDir, `${iconName}.tsx`),
+    componentContent
+  );
+
+  return true;
 }

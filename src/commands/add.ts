@@ -10,9 +10,11 @@ import {
   initializeConfig,
   ensureIndexFile,
   appendIconExport,
-} from "@lib/utils";
-import { AddCLIOptions } from "@lib/types";
-import { PLATFORMS } from "@lib/constants";
+  generateIconComponent,
+  iconFileExists,
+} from "../lib/utils";
+import { AddCLIOptions } from "../lib/types";
+import { PLATFORMS } from "../lib/constants";
 
 export async function addCommand(icons: string[], options: AddCLIOptions) {
   if (!icons.length) {
@@ -36,20 +38,35 @@ export async function addCommand(icons: string[], options: AddCLIOptions) {
 
   ensureIndexFile(config);
 
-  const availableIcons = getSvgFiles().map((file) => path.basename(file, ".svg"));
+  const svgFiles = getSvgFiles();
+  const availableIcons = svgFiles.map((file) => path.basename(file, ".svg"));
 
   for (const icon of icons) {
     if (availableIcons.includes(icon)) {
       const componentName = `${formatSvgFileNameToPascalCase(icon)}Icon`;
       const platformText = PLATFORMS[config.platform];
-      console.log(`${chalk.green("✓")} ${componentName} (${platformText})`);
-      appendIconExport(config, icon);
+      
+      try {
+        const svgFile = svgFiles.find(file => path.basename(file, '.svg') === icon);
+        if (!svgFile) throw new Error(`Could not find SVG file for ${icon}`);
+
+        // Generate the icon component and track if it was actually generated
+        const wasGenerated = await generateIconComponent(config, icon, svgFile);
+        
+        // Add the export to index file if the component was generated or overridden
+        if (wasGenerated) {
+          appendIconExport(config, icon);
+          console.log(`${chalk.green("✓")} ${componentName} (${platformText})`);
+        }
+      } catch (error) {
+        console.error(`${chalk.red("✖")} Failed to generate ${componentName}:`, error);
+      }
     } else {
       const suggestions = searchRelatedFileNames(icon, availableIcons);
       console.log(`${chalk.red("✗")} "${icon}" not found.`);
 
       if (suggestions.length > 0) {
-        console.log(chalk.green("✓ Are you looking for one of these icons?"));
+        console.log(`${chalk.magenta("?")} Here are other similar icons:`);
         const selected = await select({
           message: "Select an icon",
           options: [
@@ -65,10 +82,27 @@ export async function addCommand(icons: string[], options: AddCLIOptions) {
         });
 
         if (selected && selected !== "cancel") {
-          const componentName = `${formatSvgFileNameToPascalCase(selected.toString())}Icon`;
+          const selectedIcon = selected.toString();
+          const componentName = `${formatSvgFileNameToPascalCase(selectedIcon)}Icon`;
           const platformText = PLATFORMS[config.platform];
-          console.log(`${chalk.green("✓")} ${componentName} (${platformText})`);
-          appendIconExport(config, selected.toString());
+          
+          try {
+            // Find the full path of the SVG file
+            const svgFile = svgFiles.find(file => path.basename(file, '.svg') === selectedIcon);
+            if (!svgFile) throw new Error(`Could not find SVG file for ${selectedIcon}`);
+
+            // Generate the icon component
+            await generateIconComponent(config, selectedIcon, svgFile);
+            
+            // Add the export to index file (only if component was generated)
+            if (!iconFileExists(config, selectedIcon)) {
+              appendIconExport(config, selectedIcon);
+            }
+            
+            console.log(`${chalk.green("✓")} ${componentName} (${platformText})`);
+          } catch (error) {
+            console.error(`${chalk.red("✖")} Failed to generate ${componentName}:`, error);
+          }
         }
       }
     }

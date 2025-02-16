@@ -49,5 +49,9 @@
   },
   "bin": {
     "hako": "./dist/cli.js"
-  }
+  },
+  "files": [
+    "dist",
+    "svg-icons"
+  ]
 }

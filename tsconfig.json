@@ -12,7 +12,8 @@
     "types": ["node", "jest"],
     "baseUrl": ".",
     "paths": {
-      "@lib/*": ["./src/lib/*"]
+      "@lib/*": ["./src/lib/*"],
+      "@commands/*": ["src/commands/*"]
     },
     "rootDir": "./src",
     "moduleResolution": "node",

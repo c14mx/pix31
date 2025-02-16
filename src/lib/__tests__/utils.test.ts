@@ -10,8 +10,6 @@ import {
   calculateSimilarity,
   readConfig,
   initializeConfig,
-  ensureIndexFile,
-  appendIconExport,
 } from "../utils";
 import fs from "fs";
 import { select } from "@clack/prompts";
