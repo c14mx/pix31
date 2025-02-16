@@ -9,5 +9,9 @@ module.exports = {
   moduleNameMapper: {
     '^@lib/(.*)$': '<rootDir>/src/lib/$1'
   },
-  roots: ['<rootDir>/src']
+  roots: ['<rootDir>/src'],
+  modulePathIgnorePatterns: ['<rootDir>/dist/'],
+  clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true,
 }; 

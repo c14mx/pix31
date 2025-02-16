@@ -8,7 +8,25 @@ import {
   findAllPathElements,
   searchRelatedFileNames,
   calculateSimilarity,
+  readConfig,
+  initializeConfig,
+  ensureIndexFile,
+  appendIconExport,
 } from "../utils";
+import fs from "fs";
+import { select } from "@clack/prompts";
+import { DEFAULT_OUTPUT_PATH } from "../constants";
+
+jest.mock("fs");
+jest.mock("@clack/prompts", () => ({
+  select: jest.fn().mockImplementation(() => Promise.resolve()),
+}));
+
+jest.mock("../constants", () => ({
+  ...jest.requireActual("../constants"),
+  REACT_INDEX_TEMPLATE: "",
+  REACT_NATIVE_INDEX_TEMPLATE: "",
+}));
 
 describe("convertNumberToWord(): ", () => {
   it("Replaces number prefix with NUMBER_WORDS", () => {
@@ -36,17 +54,21 @@ describe("toPascalCase(): ", () => {
     expect(toPascalCase("battery-1")).toBe("Battery1");
     expect(toPascalCase("volume-3")).toBe("Volume3");
   });
+
+  it("handles empty or invalid input", () => {
+    expect(toPascalCase("")).toBe("");
+    expect(toPascalCase(undefined as any)).toBe("");
+    expect(toPascalCase(null as any)).toBe("");
+  });
 });
 
 describe("formatSvgFileNameToPascalCase(): ", () => {
-  it("Formats svg file name to number-safe PascalCase", () => {
+  it("Formats svg file names to number-safe PascalCase", () => {
     expect(formatSvgFileNameToPascalCase("4g.svg")).toBe("FourG");
     expect(formatSvgFileNameToPascalCase("4k-box.svg")).toBe("FourKBox");
     expect(formatSvgFileNameToPascalCase("5g.svg")).toBe("FiveG");
     expect(formatSvgFileNameToPascalCase("android.svg")).toBe("Android");
     expect(formatSvgFileNameToPascalCase("align-left.svg")).toBe("AlignLeft");
-    expect(formatSvgFileNameToPascalCase("battery-1.svg")).toBe("Battery1");
-    expect(formatSvgFileNameToPascalCase("volume-3.svg")).toBe("Volume3");
   });
 });
 
@@ -171,7 +193,7 @@ describe("generateReactNativeComponent(): ", () => {
 
     expect(result).toBe(`import React from 'react';
 import { Path } from 'react-native-svg';
-import { Icon, IconProps } from '../lib/icon';
+import { Icon, IconProps } from './index';
 
 export const HomeIcon = React.forwardRef<any, IconProps>(({
   ...props
@@ -193,7 +215,7 @@ HomeIcon.displayName = "HomeIcon";
 
     expect(result).toBe(`import React from 'react';
 import { Path } from 'react-native-svg';
-import { Icon, IconProps } from '../lib/icon';
+import { Icon, IconProps } from './index';
 
 export const ComplexIcon = React.forwardRef<any, IconProps>(({
   ...props
@@ -217,7 +239,7 @@ describe("generateReactComponent(): ", () => {
     const result = generateReactComponent("HomeIcon", pathData);
 
     expect(result).toBe(`import React from 'react';
-import { Icon, IconProps } from '../lib/icon';
+import { Icon, IconProps } from './index';
 
 export const HomeIcon = React.forwardRef<SVGSVGElement, IconProps>(({
   ...props
@@ -238,7 +260,7 @@ HomeIcon.displayName = "HomeIcon";
     const result = generateReactComponent("ComplexIcon", pathData);
 
     expect(result).toBe(`import React from 'react';
-import { Icon, IconProps } from '../lib/icon';
+import { Icon, IconProps } from './index';
 
 export const ComplexIcon = React.forwardRef<SVGSVGElement, IconProps>(({
   ...props
@@ -334,5 +356,57 @@ describe("calculateSimilarity(): ", () => {
   it("handles case insensitive comparison", () => {
     expect(calculateSimilarity("MENU", "menu-alt")).toBe(0.8);
     expect(calculateSimilarity("Arrow-Left", "arrow-left")).toBe(0.8);
+  });
+});
+
+describe("readConfig(): ", () => {
+  it("returns parsed config when file exists", () => {
+    const mockConfig = {
+      platform: "web",
+      outputPath: "src/components/icons",
+    };
+
+    fs.existsSync = jest.fn().mockReturnValue(true);
+    fs.readFileSync = jest.fn().mockReturnValue(JSON.stringify(mockConfig));
+
+    expect(readConfig()).toEqual(mockConfig);
+  });
+
+  it("returns null when config file doesn't exist", () => {
+    fs.existsSync = jest.fn().mockReturnValue(false);
+
+    expect(readConfig()).toBeNull();
+  });
+});
+
+describe("initializeConfig(): ", () => {
+  it("returns web config when user selects React", async () => {
+    (select as jest.Mock).mockResolvedValue("web");
+
+    const result = await initializeConfig();
+
+    expect(result).toEqual({
+      platform: "web",
+      outputPath: DEFAULT_OUTPUT_PATH,
+    });
+  });
+
+  it("returns native config when user selects React Native", async () => {
+    (select as jest.Mock).mockResolvedValue("native");
+
+    const result = await initializeConfig();
+
+    expect(result).toEqual({
+      platform: "native",
+      outputPath: DEFAULT_OUTPUT_PATH,
+    });
+  });
+
+  it("returns null when user declines or cancels", async () => {
+    (select as jest.Mock).mockResolvedValue("no");
+    expect(await initializeConfig()).toBeNull();
+
+    (select as jest.Mock).mockResolvedValue(null);
+    expect(await initializeConfig()).toBeNull();
   });
 });

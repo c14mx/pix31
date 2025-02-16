@@ -1,13 +1,25 @@
 import fs from "fs";
 import path from "path";
+import chalk from "chalk";
 import { Command } from "commander";
+import { select } from "@clack/prompts";
 import { parse as parseSVG } from "svgson";
 
-import { NUMBER_WORDS } from "./constants";
 import { addCommand } from "../commands/add";
-import { AddCLIOptions } from "./types";
+import {
+  CONFIG_FILE_NAME,
+  DEFAULT_OUTPUT_PATH,
+  INDEX_FILE_NAME,
+  NUMBER_WORDS,
+  PLATFORMS,
+  REACT_INDEX_TEMPLATE,
+  REACT_NATIVE_INDEX_TEMPLATE,
+} from "@lib/constants";
+import { AddCLIOptions, JsonConfig, Platform } from "@lib/types";
 
 export function convertNumberToWord(name: string): string {
+  if (!name) return "";
+
   if (/^\d/.test(name)) {
     const firstChar = name[0];
     return NUMBER_WORDS[firstChar] + name.slice(1);
@@ -16,6 +28,7 @@ export function convertNumberToWord(name: string): string {
 }
 
 export function toPascalCase(str: string): string {
+  if (!str) return "";
   return str
     .split(/[-_]/)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
@@ -25,7 +38,8 @@ export function toPascalCase(str: string): string {
 export function formatSvgFileNameToPascalCase(filename: string): string {
   const baseName = path.basename(filename, ".svg");
   const nameWithWords = convertNumberToWord(baseName);
-  return toPascalCase(nameWithWords);
+  const result = toPascalCase(nameWithWords);
+  return result;
 }
 
 export async function extractSVGPath(svgContent: string): Promise<string[] | null> {
@@ -67,7 +81,7 @@ export function generateReactNativeComponent(componentName: string, pathData: st
 
   return `import React from 'react';
 import { Path } from 'react-native-svg';
-import { Icon, IconProps } from '../lib/icon';
+import { Icon, IconProps } from './index';
 
 export const ${componentName} = React.forwardRef<any, IconProps>(({
   ...props
@@ -87,7 +101,7 @@ export function generateReactComponent(componentName: string, pathData: string[]
   const pathElements = pathData.map((d) => `      <path d="${d}" fill="currentColor"/>`).join("\n");
 
   return `import React from 'react';
-import { Icon, IconProps } from '../lib/icon';
+import { Icon, IconProps } from './index';
 
 export const ${componentName} = React.forwardRef<SVGSVGElement, IconProps>(({
   ...props
@@ -147,9 +161,68 @@ export function configureAddCommand(program: Command) {
   program
     .command("add [icons...]")
     .description("Add icons to your project")
-    .option("--web", "Generate React Web components (default)")
-    .option("--native", "Generate React Native components")
+    .option("--web", `Generate ${PLATFORMS.web} components (default)`)
+    .option("--native", `Generate ${PLATFORMS.native} components`)
     .action(async (icons: string[], options: AddCLIOptions) => {
       await addCommand(icons, options);
     });
+}
+
+export function readConfig(): JsonConfig | null {
+  try {
+    const configPath = path.join(process.cwd(), CONFIG_FILE_NAME);
+    if (!fs.existsSync(configPath)) return null;
+    return JSON.parse(fs.readFileSync(configPath, "utf-8"));
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function initializeConfig(): Promise<JsonConfig | null> {
+  const choice = await select({
+    message: "Would you like to add a config file?",
+    options: [
+      { value: "web", label: `Yes (${PLATFORMS.web})` },
+      { value: "native", label: `Yes (${PLATFORMS.native})` },
+      { value: "no", label: "No" },
+    ],
+  });
+
+  if (choice === "no" || !choice) return null;
+
+  const config: JsonConfig = {
+    platform: choice as Platform,
+    outputPath: DEFAULT_OUTPUT_PATH,
+  };
+
+  try {
+    fs.writeFileSync(path.join(process.cwd(), CONFIG_FILE_NAME), JSON.stringify(config, null, 2));
+    console.log(chalk.green("✓"), `Successfully created ${CONFIG_FILE_NAME}`);
+    return config;
+  } catch (error) {
+    console.error(chalk.red("✖"), `Error creating ${CONFIG_FILE_NAME}:`, error);
+    return null;
+  }
+}
+
+export function ensureIndexFile(config: JsonConfig): void {
+  const indexPath = path.join(process.cwd(), config.outputPath, INDEX_FILE_NAME);
+
+  if (!fs.existsSync(path.dirname(indexPath))) {
+    fs.mkdirSync(path.dirname(indexPath), { recursive: true });
+  }
+
+  if (!fs.existsSync(indexPath)) {
+    fs.writeFileSync(
+      indexPath,
+      config.platform === "native" ? REACT_NATIVE_INDEX_TEMPLATE : REACT_INDEX_TEMPLATE
+    );
+  }
+}
+
+export function appendIconExport(config: JsonConfig, iconName: string): void {
+  const indexPath = path.join(process.cwd(), config.outputPath, INDEX_FILE_NAME);
+  const exportStatement = `export * from "./${iconName}";\n`;
+
+  fs.appendFileSync(indexPath, exportStatement);
 }

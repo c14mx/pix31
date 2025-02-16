@@ -1,8 +1,18 @@
-import * as path from "path";
-import { getSvgFiles, searchRelatedFileNames, formatSvgFileNameToPascalCase } from "../lib/utils";
 import chalk from "chalk";
+import * as path from "path";
 import { select } from "@clack/prompts";
+
+import {
+  getSvgFiles,
+  searchRelatedFileNames,
+  formatSvgFileNameToPascalCase,
+  readConfig,
+  initializeConfig,
+  ensureIndexFile,
+  appendIconExport,
+} from "@lib/utils";
 import { AddCLIOptions } from "@lib/types";
+import { PLATFORMS } from "@lib/constants";
 
 export async function addCommand(icons: string[], options: AddCLIOptions) {
   if (!icons.length) {
@@ -14,14 +24,26 @@ export async function addCommand(icons: string[], options: AddCLIOptions) {
     return;
   }
 
-  const platform = options.native ? "native" : "web";
+  let config = readConfig();
+  if (!config) {
+    console.error(chalk.red("✖"), "icons.json configuration file not found.");
+    config = await initializeConfig();
+    if (!config) {
+      console.log(chalk.yellow("Operation cancelled"));
+      return;
+    }
+  }
+
+  ensureIndexFile(config);
+
   const availableIcons = getSvgFiles().map((file) => path.basename(file, ".svg"));
 
   for (const icon of icons) {
     if (availableIcons.includes(icon)) {
       const componentName = `${formatSvgFileNameToPascalCase(icon)}Icon`;
-      const platformText = platform === "native" ? "React Native" : "React";
+      const platformText = PLATFORMS[config.platform];
       console.log(`${chalk.green("✓")} ${componentName} (${platformText})`);
+      appendIconExport(config, icon);
     } else {
       const suggestions = searchRelatedFileNames(icon, availableIcons);
       console.log(`${chalk.red("✗")} "${icon}" not found.`);
@@ -44,8 +66,9 @@ export async function addCommand(icons: string[], options: AddCLIOptions) {
 
         if (selected && selected !== "cancel") {
           const componentName = `${formatSvgFileNameToPascalCase(selected.toString())}Icon`;
-          const platformText = platform === "native" ? "React Native" : "React";
+          const platformText = PLATFORMS[config.platform];
           console.log(`${chalk.green("✓")} ${componentName} (${platformText})`);
+          appendIconExport(config, selected.toString());
         }
       }
     }
