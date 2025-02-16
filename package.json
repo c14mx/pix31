@@ -1,8 +1,12 @@
 {
   "scripts": {
     "scrape-icons": "ts-node src/scrape-pixelarticons.ts",
-    "generate-react-components": "ts-node src/generate-react-icons.ts",
-    "generate-react-index": "ts-node src/generate-react-index-file.ts"
+    "generate-react-icons": "ts-node src/generate-react-icons.ts",
+    "generate-react-index": "ts-node src/generate-react-index-file.ts",
+    "clean": "rm -rf react-icons/*",
+    "generate-all": "npm run clean && npm run generate-react-icons && npm run generate-react-index",
+    "format": "prettier --write \"src/**/*.{ts,tsx,json,js,jsx}\"",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --fix"
   },
   "name": "pixelarticons-scraper",
   "version": "1.0.0",
@@ -23,6 +27,7 @@
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.13.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "prettier": "^3.1.0"
   }
 }

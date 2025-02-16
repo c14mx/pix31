@@ -1,11 +1,11 @@
-import puppeteer from 'puppeteer';
-import fs from 'fs-extra';
-import path from 'path';
-import pino from 'pino';
+import puppeteer from "puppeteer";
+import fs from "fs-extra";
+import path from "path";
+import pino from "pino";
 
 const logger = pino({
   transport: undefined,
-  level: 'info',
+  level: "info",
   formatters: {
     level: (label) => {
       return { level: label.toUpperCase() };
@@ -23,31 +23,31 @@ async function scrapeIcons(): Promise<ScrapingStats> {
   const stats: ScrapingStats = {
     totalFetched: 0,
     totalCreated: 0,
-    failedSvgs: []
+    failedSvgs: [],
   };
 
   try {
     // Create svg-icons directory if it doesn't exist
-    const outputDir = path.join(process.cwd(), 'svg-icons');
+    const outputDir = path.join(process.cwd(), "svg-icons");
     await fs.ensureDir(outputDir);
 
-    logger.info('Launching browser...');
+    logger.info("Launching browser...");
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
 
-    logger.info('Navigating to pixelarticons.com...');
-    await page.goto('https://pixelarticons.com/', { waitUntil: 'networkidle0' });
+    logger.info("Navigating to pixelarticons.com...");
+    await page.goto("https://pixelarticons.com/", { waitUntil: "networkidle0" });
 
     // Wait for the grid to load
-    await page.waitForSelector('.grid.grid-cols-5');
+    await page.waitForSelector(".grid.grid-cols-5");
 
     const icons = await page.evaluate(() => {
-      const root = document.querySelector('.grid.grid-cols-5');
+      const root = document.querySelector(".grid.grid-cols-5");
       if (!root) return [];
 
-      return Array.from(root.children).map(child => ({
-        name: child.children[1]?.textContent?.trim() || '',
-        svg: child.children[0]?.outerHTML || ''
+      return Array.from(root.children).map((child) => ({
+        name: child.children[1]?.textContent?.trim() || "",
+        svg: child.children[0]?.outerHTML || "",
       }));
     });
 
@@ -58,7 +58,7 @@ async function scrapeIcons(): Promise<ScrapingStats> {
     for (const icon of icons) {
       try {
         if (!icon.name || !icon.svg) {
-          throw new Error('Missing name or SVG content');
+          throw new Error("Missing name or SVG content");
         }
 
         const filePath = path.join(outputDir, `${icon.name}.svg`);
@@ -73,30 +73,30 @@ async function scrapeIcons(): Promise<ScrapingStats> {
 
     await browser.close();
   } catch (error) {
-    logger.error('Script failed:', error);
+    logger.error("Script failed:", error);
   }
 
   return stats;
 }
 
 async function main() {
-  logger.info('Starting icon scraping...');
-  
+  logger.info("Starting icon scraping...");
+
   const stats = await scrapeIcons();
-  
-  logger.info('\nScraping completed!');
-  logger.info('Summary:');
+
+  logger.info("\nScraping completed!");
+  logger.info("Summary:");
   logger.info(`Total SVGs fetched: ${stats.totalFetched}`);
   logger.info(`Total SVG files created: ${stats.totalCreated}`);
   logger.info(`Total SVGs failed: ${stats.failedSvgs.length}`);
-  
+
   if (stats.failedSvgs.length > 0) {
-    logger.info('\nFailed SVGs:');
-    stats.failedSvgs.forEach(name => logger.info(`- ${name}`));
+    logger.info("\nFailed SVGs:");
+    stats.failedSvgs.forEach((name) => logger.info(`- ${name}`));
   }
 }
 
-main().catch(error => {
-  logger.error('Script failed:', error);
+main().catch((error) => {
+  logger.error("Script failed:", error);
   process.exit(1);
-}); 
+});

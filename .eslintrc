@@ -1,0 +1,9 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "rules": {
+    "no-warning-comments": "error",
+    "no-inline-comments": "error",
+    "no-multi-line-comments": "error"
+  }
+} 
