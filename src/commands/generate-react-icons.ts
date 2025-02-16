@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { extractSVGPath, generateReactComponent, toComponentName } from "@lib/utils";
+import { extractSVGPath, generateReactComponent, formatSvgFileNameToPascalCase } from "@lib/utils";
 import { GenerationStats } from "@lib/types";
 
 export async function generateReactIcons(): Promise<GenerationStats> {
@@ -30,7 +30,7 @@ export async function generateReactIcons(): Promise<GenerationStats> {
         throw new Error("Could not extract path data from SVG");
       }
 
-      const componentName = toComponentName(svgFile);
+      const componentName = formatSvgFileNameToPascalCase(svgFile);
       const componentContent = generateReactComponent(componentName + "Icon", pathData);
       const outputPath = path.join(outputDir, `${componentName}.tsx`);
 

@@ -6,7 +6,10 @@
     "clean": "rm -rf react-icons/*",
     "generate-all": "npm run clean && npm run generate-react-icons && npm run generate-react-index",
     "format": "prettier --write \"src/**/*.{ts,tsx,json,js,jsx}\"",
-    "lint": "eslint \"src/**/*.{ts,tsx}\" --fix"
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "name": "pixelarticons-scraper",
   "version": "1.0.0",

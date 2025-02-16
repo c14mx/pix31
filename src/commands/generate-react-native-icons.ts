@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { extractSVGPath, generateReactNativeComponent, toComponentName } from "@lib/utils";
+import { extractSVGPath, generateReactNativeComponent, formatSvgFileNameToPascalCase } from "@lib/utils";
 import { GenerationStats } from "@lib/types";
 
 
@@ -31,7 +31,7 @@ export async function generateReactNativeIcons(): Promise<GenerationStats> {
         throw new Error("Could not extract path data from SVG");
       }
 
-      const componentName = toComponentName(svgFile);
+      const componentName = formatSvgFileNameToPascalCase(svgFile);
       const componentContent = generateReactNativeComponent(componentName + "Icon", pathData);
       const outputPath = path.join(outputDir, `${componentName}.tsx`);
 

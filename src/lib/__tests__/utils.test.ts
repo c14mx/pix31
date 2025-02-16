@@ -1,0 +1,266 @@
+import { convertNumberToWord, formatSvgFileNameToPascalCase, generateReactComponent, generateReactNativeComponent, toPascalCase } from "@lib/utils";
+import { extractSVGPath, findAllPathElements } from "@lib/utils";
+
+describe("convertNumberToWord(): ", () => {
+  it("Replaces number prefix with NUMBER_WORDS", () => {
+    expect(convertNumberToWord("4g")).toBe("Four-g");
+    expect(convertNumberToWord("4k-box")).toBe("Four-k-box");
+    expect(convertNumberToWord("5g")).toBe("Five-g");
+  });
+
+  it("Keeps original string if there is no number prefix", () => {
+    expect(convertNumberToWord("android")).toBe("android");
+    expect(convertNumberToWord("align-left")).toBe("align-left");
+    expect(convertNumberToWord("battery-1")).toBe("battery-1");
+    expect(convertNumberToWord("battery-2")).toBe("battery-2");
+    expect(convertNumberToWord("volume-3")).toBe("volume-3");
+  });
+}); 
+
+describe("toPascalCase(): ", () => {
+  it("Converts string to PascalCase", () => {
+    expect(toPascalCase("Four-g")).toBe("FourG");
+    expect(toPascalCase("Four-k-box")).toBe("FourKBox");
+    expect(toPascalCase("Five-g")).toBe("FiveG");
+    expect(toPascalCase("android")).toBe("Android");
+    expect(toPascalCase("align-left")).toBe("AlignLeft");
+    expect(toPascalCase("battery-1")).toBe("Battery1");
+    expect(toPascalCase("volume-3")).toBe("Volume3");
+  });
+});
+
+describe("formatSvgFileNameToPascalCase(): ", () => {
+  it("Formats svg file name to number-safe PascalCase", () => {
+    expect(formatSvgFileNameToPascalCase("4g.svg")).toBe("FourG");
+    expect(formatSvgFileNameToPascalCase("4k-box.svg")).toBe("FourKBox");
+    expect(formatSvgFileNameToPascalCase("5g.svg")).toBe("FiveG");
+    expect(formatSvgFileNameToPascalCase("android.svg")).toBe("Android");
+    expect(formatSvgFileNameToPascalCase("align-left.svg")).toBe("AlignLeft");
+    expect(formatSvgFileNameToPascalCase("battery-1.svg")).toBe("Battery1");
+    expect(formatSvgFileNameToPascalCase("volume-3.svg")).toBe("Volume3");
+  });
+});
+
+describe("extractSVGPath(): ", () => {
+  it("Extracts path data from SVG with single path", async () => {
+    const svgContent = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"/>
+      </svg>
+    `;
+    const result = await extractSVGPath(svgContent);
+    expect(result).toEqual(["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"]);
+  });
+
+  it("Extracts all paths separately when multiple paths exist", async () => {
+    const svgContent = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"/>
+        <path d="M4 4h16v16H4z"/>
+      </svg>
+    `;
+    const result = await extractSVGPath(svgContent);
+    expect(result).toEqual([
+      "M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z",
+      "M4 4h16v16H4z"
+    ]);
+  });
+
+  it("Extracts nested paths", async () => {
+    const svgContent = `
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <g>
+          <path d="M1 1h1v1h-1z"/>
+          <g>
+            <path d="M2 2h2v2h-2z"/>
+          </g>
+        </g>
+      </svg>
+    `;
+    const result = await extractSVGPath(svgContent);
+    expect(result).toEqual([
+      "M1 1h1v1h-1z",
+      "M2 2h2v2h-2z"
+    ]);
+  });
+
+  it("Returns null when no path element exists", async () => {
+    const svgContent = `
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100"/>
+      </svg>
+    `;
+    const result = await extractSVGPath(svgContent);
+    expect(result).toBeNull();
+  });
+});
+
+describe("findAllPathElements(): ", () => {
+  it("Finds path at root level", () => {
+    const node = {
+      name: "svg",
+      children: [
+        { name: "path", attributes: { d: "M1 1h1v1h-1z" } }
+      ]
+    };
+    
+    const paths = findAllPathElements(node);
+    expect(paths).toHaveLength(1);
+    expect(paths[0].attributes.d).toBe("M1 1h1v1h-1z");
+  });
+
+  it("Finds multiple paths at different nesting levels", () => {
+    const node = {
+      name: "svg",
+      children: [
+        { name: "path", attributes: { d: "M1 1h1v1h-1z" } },
+        {
+          name: "g",
+          children: [
+            { name: "path", attributes: { d: "M2 2h2v2h-2z" } },
+            {
+              name: "g",
+              children: [
+                { name: "path", attributes: { d: "M3 3h3v3h-3z" } }
+              ]
+            }
+          ]
+        }
+      ]
+    };
+    
+    const paths = findAllPathElements(node);
+    expect(paths).toHaveLength(3);
+    expect(paths.map(p => p.attributes.d)).toEqual([
+      "M1 1h1v1h-1z",
+      "M2 2h2v2h-2z",
+      "M3 3h3v3h-3z"
+    ]);
+  });
+
+  it("Returns empty array when no paths exist", () => {
+    const node = {
+      name: "svg",
+      children: [
+        { name: "rect", attributes: { width: "100", height: "100" } },
+        {
+          name: "g",
+          children: [
+            { name: "circle", attributes: { r: "50" } }
+          ]
+        }
+      ]
+    };
+    
+    const paths = findAllPathElements(node);
+    expect(paths).toHaveLength(0);
+  });
+
+  it("Handles node without children", () => {
+    const node = {
+      name: "rect",
+      attributes: { width: "100", height: "100" }
+    };
+    
+    const paths = findAllPathElements(node);
+    expect(paths).toHaveLength(0);
+  });
+});
+
+describe("generateReactNativeComponent(): ", () => {
+  it("Generates component with single path", () => {
+    const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"];
+    const result = generateReactNativeComponent("HomeIcon", pathData);
+    
+    expect(result).toBe(`import React from 'react';
+import { Path } from 'react-native-svg';
+import { Icon, IconProps } from '../lib/icon';
+
+export const HomeIcon = React.forwardRef<any, IconProps>(({
+  ...props
+}, ref) => {
+  return (
+    <Icon ref={ref} {...props}>
+      <Path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z" fill={props.color ?? "currentColor"} />
+    </Icon>
+  );
+});
+
+HomeIcon.displayName = "HomeIcon";
+`);
+  });
+
+  it("Generates component with multiple paths", () => {
+    const pathData = [
+      "M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z",
+      "M4 4h16v16H4z"
+    ];
+    const result = generateReactNativeComponent("ComplexIcon", pathData);
+    
+    expect(result).toBe(`import React from 'react';
+import { Path } from 'react-native-svg';
+import { Icon, IconProps } from '../lib/icon';
+
+export const ComplexIcon = React.forwardRef<any, IconProps>(({
+  ...props
+}, ref) => {
+  return (
+    <Icon ref={ref} {...props}>
+      <Path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z" fill={props.color ?? "currentColor"} />
+      <Path d="M4 4h16v16H4z" fill={props.color ?? "currentColor"} />
+    </Icon>
+  );
+});
+
+ComplexIcon.displayName = "ComplexIcon";
+`);
+  });
+});
+
+describe("generateReactComponent(): ", () => {
+  it("Generates component with single path", () => {
+    const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"];
+    const result = generateReactComponent("HomeIcon", pathData);
+    
+    expect(result).toBe(`import React from 'react';
+import { HakoIcon, HakoIconProps } from '../lib/hako-icon';
+
+export const HomeIcon = React.forwardRef<SVGSVGElement, HakoIconProps>(({
+  ...props
+}, ref) => {
+  return (
+    <HakoIcon ref={ref} {...props}>
+      <path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z" fill="currentColor"/>
+    </HakoIcon>
+  );
+}) as React.ForwardRefExoticComponent<HakoIconProps & React.RefAttributes<SVGSVGElement>>;
+
+HomeIcon.displayName = "HomeIcon";
+`);
+  });
+
+  it("Generates component with multiple paths", () => {
+    const pathData = [
+      "M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z",
+      "M4 4h16v16H4z"
+    ];
+    const result = generateReactComponent("ComplexIcon", pathData);
+    
+    expect(result).toBe(`import React from 'react';
+import { HakoIcon, HakoIconProps } from '../lib/hako-icon';
+
+export const ComplexIcon = React.forwardRef<SVGSVGElement, HakoIconProps>(({
+  ...props
+}, ref) => {
+  return (
+    <HakoIcon ref={ref} {...props}>
+      <path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z" fill="currentColor"/>
+      <path d="M4 4h16v16H4z" fill="currentColor"/>
+    </HakoIcon>
+  );
+}) as React.ForwardRefExoticComponent<HakoIconProps & React.RefAttributes<SVGSVGElement>>;
+
+ComplexIcon.displayName = "ComplexIcon";
+`);
+  });
+});

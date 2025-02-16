@@ -1,11 +1,11 @@
-import { numberWords } from "./constants";
+import { NUMBER_WORDS } from "./constants";
 import { parse as parseSVG } from "svgson";
 import path from "path";
 
 export function convertNumberToWord(name: string): string {
   if (/^\d/.test(name)) {
     const firstChar = name[0];
-    return numberWords[firstChar] + name.slice(1);
+    return NUMBER_WORDS[firstChar] + name.slice(1);
   }
   return name;
 }
@@ -17,41 +17,49 @@ export function toPascalCase(str: string): string {
     .join("");
 }
 
-export function toComponentName(filename: string): string {
+export function formatSvgFileNameToPascalCase(filename: string): string {
   const baseName = path.basename(filename, ".svg");
   const nameWithWords = convertNumberToWord(baseName);
   return toPascalCase(nameWithWords);
 }
 
-export async function extractSVGPath(svgContent: string): Promise<string | null> {
+export async function extractSVGPath(svgContent: string): Promise<string[] | null> {
   try {
     const parsed = await parseSVG(svgContent);
-    const pathElement = findPathElement(parsed);
-    if (pathElement && pathElement.attributes) {
-      return pathElement.attributes.d;
+    const pathElements = findAllPathElements(parsed);
+    
+    if (pathElements.length === 0) {
+      return null;
     }
-    return null;
+
+    return pathElements.map(element => element.attributes.d);
   } catch (error) {
     console.error("Failed to parse SVG:", error);
     return null;
   }
 }
 
-export function findPathElement(node: any): any {
+export function findAllPathElements(node: any): any[] {
+  let paths: any[] = [];
+  
   if (node.name === "path") {
-    return node;
+    paths.push(node);
   }
+  
   if (node.children) {
     for (const child of node.children) {
-      const result = findPathElement(child);
-      if (result) return result;
+      paths = paths.concat(findAllPathElements(child));
     }
   }
-  return null;
+  
+  return paths;
 }
 
+export function generateReactNativeComponent(componentName: string, pathData: string[]): string {
+  const pathElements = pathData
+    .map(d => `      <Path d="${d}" fill={props.color ?? "currentColor"} />`)
+    .join("\n");
 
-export function generateReactNativeComponent(componentName: string, pathData: string): string {
   return `import React from 'react';
 import { Path } from 'react-native-svg';
 import { Icon, IconProps } from '../lib/icon';
@@ -61,7 +69,7 @@ export const ${componentName} = React.forwardRef<any, IconProps>(({
 }, ref) => {
   return (
     <Icon ref={ref} {...props}>
-      <Path d="${pathData}" fill={props.color ?? "currentColor"} />
+${pathElements}
     </Icon>
   );
 });
@@ -70,7 +78,11 @@ ${componentName}.displayName = "${componentName}";
 `;
 }
 
-export function generateReactComponent(componentName: string, pathData: string): string {
+export function generateReactComponent(componentName: string, pathData: string[]): string {
+  const pathElements = pathData
+    .map(d => `      <path d="${d}" fill="currentColor"/>`)
+    .join("\n");
+
   return `import React from 'react';
 import { HakoIcon, HakoIconProps } from '../lib/hako-icon';
 
@@ -79,7 +91,7 @@ export const ${componentName} = React.forwardRef<SVGSVGElement, HakoIconProps>((
 }, ref) => {
   return (
     <HakoIcon ref={ref} {...props}>
-      <path d="${pathData}" fill="currentColor"/>
+${pathElements}
     </HakoIcon>
   );
 }) as React.ForwardRefExoticComponent<HakoIconProps & React.RefAttributes<SVGSVGElement>>;
