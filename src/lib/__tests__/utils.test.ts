@@ -10,14 +10,17 @@ import {
   calculateSimilarity,
   readConfig,
   initializeConfig,
+  getReactNativeExportLine,
+  getReactExportLine,
 } from "../utils";
 import fs from "fs";
-import { select } from "@clack/prompts";
+import { select, text } from "@clack/prompts";
 import { DEFAULT_OUTPUT_PATH } from "../constants";
 
 jest.mock("fs");
 jest.mock("@clack/prompts", () => ({
-  select: jest.fn().mockImplementation(() => Promise.resolve()),
+  select: jest.fn(),
+  text: jest.fn(),
 }));
 
 jest.mock("../constants", () => ({
@@ -378,33 +381,68 @@ describe("readConfig(): ", () => {
 });
 
 describe("initializeConfig(): ", () => {
-  it("returns web config when user selects React", async () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Mock fs functions
+    (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
+  });
+
+  it("creates web config with custom output path", async () => {
     (select as jest.Mock).mockResolvedValue("web");
+    (text as jest.Mock).mockResolvedValue("custom/path");
 
-    const result = await initializeConfig();
+    const config = await initializeConfig();
 
-    expect(result).toEqual({
+    expect(config).toEqual({
       platform: "web",
-      outputPath: DEFAULT_OUTPUT_PATH,
+      outputPath: "custom/path",
     });
   });
 
-  it("returns native config when user selects React Native", async () => {
+  it("creates native config with default output path", async () => {
     (select as jest.Mock).mockResolvedValue("native");
+    (text as jest.Mock).mockResolvedValue(DEFAULT_OUTPUT_PATH);
 
-    const result = await initializeConfig();
+    const config = await initializeConfig();
 
-    expect(result).toEqual({
+    expect(config).toEqual({
       platform: "native",
       outputPath: DEFAULT_OUTPUT_PATH,
     });
   });
 
-  it("returns null when user declines or cancels", async () => {
-    (select as jest.Mock).mockResolvedValue("no");
-    expect(await initializeConfig()).toBeNull();
+  it("returns null when user cancels platform selection", async () => {
+    (select as jest.Mock).mockResolvedValue("cancel");
+    
+    const config = await initializeConfig();
+    
+    expect(config).toBeNull();
+  });
 
-    (select as jest.Mock).mockResolvedValue(null);
-    expect(await initializeConfig()).toBeNull();
+  it("returns null when user cancels output path selection", async () => {
+    (select as jest.Mock).mockResolvedValue("web");
+    (text as jest.Mock).mockResolvedValue(null);
+    
+    const config = await initializeConfig();
+    
+    expect(config).toBeNull();
   });
 });
+
+describe("getReactNativeExportLine(): ", () => {
+  it("Returns the export line for React Native", async () => {
+    expect(getReactNativeExportLine("home")).toBe(`export * from "./home";`);
+  })
+
+  it("Does not format icon name string", async () => {
+    expect(getReactNativeExportLine("abc-123-789")).toBe(`export * from "./abc-123-789";`);
+  })
+})
+
+describe("getReactExportLine(): ", () => {
+  it("Returns the export line for React", async () => {
+    const iconName = "radio-tower";
+    const formattedIconName = `${toPascalCase(iconName)}Icon`;
+    expect(getReactExportLine(iconName)).toBe(`export { ${formattedIconName} } from "./${iconName}";`);
+  })
+})

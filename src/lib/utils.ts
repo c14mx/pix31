@@ -181,7 +181,6 @@ export function readConfig(): JsonConfig | null {
 }
 
 export async function initializeConfig(): Promise<JsonConfig | null> {
-  // Platform selection
   const platformChoice = await select({
     message: "Select your platform",
     options: [
@@ -235,15 +234,13 @@ export function ensureIndexFile(config: JsonConfig): void {
 export function appendIconExport(config: JsonConfig, iconName: string): void {
   const indexPath = path.join(process.cwd(), config.outputPath, INDEX_FILE_NAME);
   const existingContent = fs.readFileSync(indexPath, 'utf-8');
-  const exportLine = `export * from "./${iconName}";`;
+  const exportLine = config.platform === "native" ? getReactNativeExportLine(iconName) : getReactExportLine(iconName);
   
-  // Check if export already exists, ignoring whitespace and newlines
   const hasExport = existingContent
     .split('\n')
     .some(line => line.trim() === exportLine);
   
   if (!hasExport) {
-    // Add a newline before the export if the file is not empty and doesn't end with a newline
     const needsNewline = existingContent.length > 0 && !existingContent.endsWith('\n');
     const contentToAppend = needsNewline 
       ? `\n${exportLine}\n` 
@@ -275,7 +272,6 @@ export async function generateIconComponent(
   const outputDir = path.join(process.cwd(), config.outputPath);
   const componentName = `${formatSvgFileNameToPascalCase(iconName)}Icon`;
   
-  // Check if icon already exists
   if (iconFileExists(config, iconName)) {
     console.log(`${chalk.yellow("!")} ${componentName} already exists in ${config.outputPath}`);
     const shouldOverride = await promptOverride(componentName, config.outputPath);
@@ -295,16 +291,22 @@ export async function generateIconComponent(
     ? generateReactNativeComponent(componentName, pathData)
     : generateReactComponent(componentName, pathData);
 
-  // Ensure the output directory exists
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  // Write the component file
   fs.writeFileSync(
     path.join(outputDir, `${iconName}.tsx`),
     componentContent
   );
 
   return true;
+}
+
+export function getReactNativeExportLine(iconName: string): string {
+  return `export * from "./${iconName}";`;
+}
+
+export function getReactExportLine(iconName: string): string {
+  return `export { ${toPascalCase(iconName)}Icon } from "./${iconName}";`;
 }

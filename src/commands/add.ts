@@ -14,7 +14,7 @@ import {
   iconFileExists,
 } from "../lib/utils";
 import { AddCLIOptions } from "../lib/types";
-import { PLATFORMS } from "../lib/constants";
+import { CONFIG_FILE_NAME, PLATFORMS } from "../lib/constants";
 
 export async function addCommand(icons: string[], options: AddCLIOptions) {
   if (!icons.length) {
@@ -28,7 +28,7 @@ export async function addCommand(icons: string[], options: AddCLIOptions) {
 
   let config = readConfig();
   if (!config) {
-    console.error(chalk.red("✖"), "icons.json configuration file not found.");
+    console.error(chalk.red("✖"), `${CONFIG_FILE_NAME} config file not found. Creating config file.`);
     config = await initializeConfig();
     if (!config) {
       console.log(chalk.yellow("Operation cancelled"));
@@ -50,10 +50,8 @@ export async function addCommand(icons: string[], options: AddCLIOptions) {
         const svgFile = svgFiles.find(file => path.basename(file, '.svg') === icon);
         if (!svgFile) throw new Error(`Could not find SVG file for ${icon}`);
 
-        // Generate the icon component and track if it was actually generated
         const wasGenerated = await generateIconComponent(config, icon, svgFile);
         
-        // Add the export to index file if the component was generated or overridden
         if (wasGenerated) {
           appendIconExport(config, icon);
           console.log(`${chalk.green("✓")} ${componentName} (${platformText})`);
@@ -87,14 +85,11 @@ export async function addCommand(icons: string[], options: AddCLIOptions) {
           const platformText = PLATFORMS[config.platform];
           
           try {
-            // Find the full path of the SVG file
             const svgFile = svgFiles.find(file => path.basename(file, '.svg') === selectedIcon);
             if (!svgFile) throw new Error(`Could not find SVG file for ${selectedIcon}`);
 
-            // Generate the icon component
             await generateIconComponent(config, selectedIcon, svgFile);
             
-            // Add the export to index file (only if component was generated)
             if (!iconFileExists(config, selectedIcon)) {
               appendIconExport(config, selectedIcon);
             }
