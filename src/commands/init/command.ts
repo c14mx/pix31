@@ -43,7 +43,7 @@ async function detectFramework(): Promise<Platform | null> {
   }
 }
 
-async function initializeConfig(): Promise<JsonConfig | null> {
+export async function initializeConfig(): Promise<JsonConfig | null> {
   const spinner = ora("Initializing config").start();
   const configPath = getConfigPath();
 

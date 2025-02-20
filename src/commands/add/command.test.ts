@@ -1,165 +1,152 @@
-import fs from "fs/promises";
-import { select } from "@clack/prompts";
-import { addCommand } from "./command";
+// Mock all utils with proper types
+const mockUtils = {
+  readConfig: jest.fn(),
+  getSvgFiles: jest.fn(),
+  generateIconComponent: jest.fn(),
+  appendIconExport: jest.fn(),
+  formatSvgFileNameToPascalCase: jest.fn(),
+  iconFileExists: jest.fn(),
+  ensureIndexFile: jest.fn(),
+  searchRelatedFileNames: jest.fn(),
+};
 
-jest.mock("fs/promises", () => ({
-  writeFile: jest.fn().mockResolvedValue(undefined),
-  mkdir: jest.fn().mockResolvedValue(undefined),
-}));
-
+// All mocks need to be defined before imports
+jest.mock("../../lib/utils", () => mockUtils);
 jest.mock("path", () => ({
+  basename: jest.fn((file, ext) => {
+    if (ext === ".svg") return "chevron-down";
+    return file;
+  }),
   join: jest.fn((...args) => args.join("/")),
 }));
-
-jest.mock("@clack/prompts", () => ({
-  select: jest.fn(),
-  intro: jest.fn(),
-  outro: jest.fn(),
-  text: jest.fn(),
-}));
-
-jest.mock("../../lib/utils", () => ({
-  getSvgFiles: jest.fn().mockReturnValue(["chevron-down.svg", "chevron-up.svg"]),
-  searchRelatedFileNames: jest.fn().mockReturnValue(["chevron-down"]),
-  formatSvgFileNameToPascalCase: jest.fn(
-    (name: string) =>
-      name
-        .split("-")
-        .map((part: string) => part.charAt(0).toUpperCase() + part.slice(1))
-        .join("") + "Icon"
-  ),
-  generateIconComponent: jest.fn().mockResolvedValue(true),
-  readConfig: jest.fn().mockReturnValue({
+jest.mock("../init/command", () => ({
+  initializeConfig: jest.fn().mockResolvedValue({
     platform: "web",
-    outputPath: "src/components/icons",
+    outputPath: "src/components/icons"
+  })
+}));
+jest.mock("ora", () => ({
+  __esModule: true,
+  default: () => ({
+    start: jest.fn().mockReturnThis(),
+    stop: jest.fn().mockReturnThis(),
+    succeed: jest.fn().mockReturnThis(),
+    fail: jest.fn().mockReturnThis(),
+    info: jest.fn().mockReturnThis(),
   }),
-  ensureIndexFile: jest.fn(),
-  appendIconExport: jest.fn(),
-  iconFileExists: jest.fn().mockReturnValue(false),
+}));
+jest.mock("prompts", () => jest.fn());
+
+// Add this with other mocks at the top
+jest.mock('chalk', () => ({
+  yellow: (str: string) => str,
+  red: (str: string) => str,
+  green: (str: string) => str === "✓" ? "✓" : str,
+  white: (str: string) => str,
 }));
 
-jest.mock("../../lib/constants", () => ({
-  PLATFORMS: {
-    web: "React",
-    native: "React Native",
-  },
-  CONFIG_FILE_NAME: "pix31.config.json",
-}));
+// Imports come after all mocks
+import chalk from "chalk";
+import prompts from "prompts";
+import { addCommand } from "./command";
+import { LIB_NAME, CONFIG_FILE_NAME, PLATFORMS } from "../../lib/constants";
 
-describe("addCommand", () => {
-  const mockCwd = "/fake/project";
-
-  beforeAll(() => {
-    jest.spyOn(process, "cwd").mockReturnValue(mockCwd);
-  });
-
+describe(`npx ${LIB_NAME} add`, () => {
   beforeEach(() => {
     jest.clearAllMocks();
-
-    (select as jest.Mock).mockResolvedValueOnce("chevron-down");
-    (fs.writeFile as jest.Mock).mockResolvedValue(undefined);
-    (fs.mkdir as jest.Mock).mockResolvedValue(undefined);
-  });
-
-  it("Handles icon selection from suggestions", async () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation();
-
-    await addCommand(["non-existent-icon"], {});
-
-    expect(select).toHaveBeenCalledWith({
-      message: "Select an icon",
-      options: [
-        { value: "chevron-down", label: "chevron-down" },
-        { value: "cancel", label: "CANCEL" },
-      ],
+    
+    // Reset all utils mocks to default values
+    mockUtils.readConfig.mockReturnValue({
+      platform: "web",
+      outputPath: "src/components/icons"
     });
+    mockUtils.getSvgFiles.mockReturnValue(["chevron-down.svg"]);
+    mockUtils.generateIconComponent.mockResolvedValue(true);
+    mockUtils.formatSvgFileNameToPascalCase.mockReturnValue("ChevronDown");
+    mockUtils.iconFileExists.mockReturnValue(false);
+    mockUtils.searchRelatedFileNames.mockReturnValue(["chevron-down"]);
 
-    const { generateIconComponent, appendIconExport } = require("../../lib/utils");
-    expect(generateIconComponent).toHaveBeenCalled();
-    expect(appendIconExport).toHaveBeenCalled();
+    // Mock console methods properly
+    jest.spyOn(console, 'log').mockImplementation();
+    jest.spyOn(console, 'error').mockImplementation();
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("ChevronDownIcon (React)"));
-
-    consoleSpy.mockRestore();
+    // Mock prompts to return undefined by default
+    (prompts as unknown as jest.Mock).mockResolvedValue({ selected: undefined });
   });
 
-  it("Handles cancellation", async () => {
-    (select as jest.Mock).mockResolvedValue("cancel");
-
-    await addCommand(["chevron"], {});
-
-    const { generateIconComponent } = require("../../lib/utils");
-    expect(generateIconComponent).not.toHaveBeenCalled();
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
-  it("Creates output directory if it doesn't exist", async () => {
-    const { getConfig } = require("../../lib/utils");
-    const config = { platform: "web", outputPath: "src/components/icons" };
-    getConfig.mockResolvedValue(config);
-
-    await addCommand(["chevron"], {});
-
-    expect(fs.mkdir).toHaveBeenCalledWith(expect.stringContaining(config.outputPath), {
-      recursive: true,
-    });
-  });
-
-  it("Handles filesystem errors", async () => {
-    (fs.writeFile as jest.Mock).mockRejectedValue(new Error("Write failed"));
-
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-
-    await addCommand(["chevron"], {});
-
-    expect(consoleSpy).toHaveBeenCalledWith(expect.any(String), expect.any(Error));
-
-    consoleSpy.mockRestore();
-  });
-
-  it("Writes correct file content", async () => {
-    const { generateIconComponent } = require("../../lib/utils");
-    const mockComponent = {
-      content: "export const ChevronDown = () => <svg>...</svg>",
-      fileName: "ChevronDown.tsx",
-    };
-    generateIconComponent.mockResolvedValue(mockComponent);
-
-    await addCommand(["chevron"], {});
-
-    expect(fs.writeFile).toHaveBeenCalledWith(
-      expect.stringContaining(mockComponent.fileName),
-      mockComponent.content,
-      "utf8"
+  it("Shows help message when no icons specified", async () => {
+    await addCommand([], {});
+    
+    expect(console.log).toHaveBeenCalledWith(
+      chalk.yellow("What would you like to add?")
     );
   });
 
-  describe("generateIndexFile", () => {
-    it("generates index file with correct exports", async () => {
-      const { generateIndexFile } = require("../../lib/utils");
-      const mockContent = `export { Icon1Icon } from './Icon1';`;
-      generateIndexFile.mockResolvedValue(mockContent);
+  it("Initializes config when not found", async () => {
+    mockUtils.readConfig.mockReturnValueOnce(null);  // Only return null for this test
+    
+    await addCommand(["some-icon"], {});
 
-      await addCommand(["icon1"], {});
+    expect(console.error).toHaveBeenCalledWith(
+      chalk.yellow("!"),
+      `${CONFIG_FILE_NAME} file not found. Initializing ${LIB_NAME}...`
+    );
+  });
 
-      expect(fs.writeFile).toHaveBeenCalledWith(
-        expect.stringContaining("index.ts"),
-        expect.any(String),
-        "utf8"
-      );
+  it("Generates icon component and appends export", async () => {
+    // Mock getSvgFiles to return the file we want
+    const svgFile = "path/to/chevron-down.svg";
+    mockUtils.getSvgFiles.mockReturnValue([svgFile]);
+
+    // Mock path.basename to return the icon name for both checks
+    const pathMock = jest.requireMock("path");
+    pathMock.basename.mockImplementation((file: string, ext?: string) => {
+      if (ext === ".svg") return "chevron-down";
+      return file;
     });
 
-    it("excludes pix31-icon.tsx from component exports", async () => {
-      // Implementation depends on your actual code
-      // Add specific test implementation here
-    });
+    // Mock searchRelatedFileNames to return empty array to avoid prompts flow
+    mockUtils.searchRelatedFileNames.mockReturnValue([]);
 
-    it("logs generation summary", async () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+    await addCommand(["chevron-down"], {});
 
-      await addCommand(["icon1"], {});
+    // Check if generateIconComponent was called with correct args
+    expect(mockUtils.generateIconComponent).toHaveBeenCalledWith(
+      { platform: "web", outputPath: "src/components/icons" },
+      "chevron-down",
+      svgFile  // Use the exact same file path
+    );
 
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Generated"));
-      consoleSpy.mockRestore();
-    });
+    // Check if appendIconExport was called
+    expect(mockUtils.appendIconExport).toHaveBeenCalledWith(
+      { platform: "web", outputPath: "src/components/icons" },
+      "chevron-down"
+    );
+
+    // Check success message
+    expect(console.log).toHaveBeenCalledWith(
+      `✓ ChevronDownIcon`
+    );
+  });
+
+  it("Handles icon generation failure", async () => {
+    // Mock prompts to return the icon name
+    (prompts as unknown as jest.Mock).mockResolvedValueOnce({ selected: "chevron-down" });
+    
+    // Mock the error case
+    mockUtils.generateIconComponent.mockRejectedValueOnce(new Error("Generation failed"));
+    
+    // Mock formatSvgFileNameToPascalCase to return correct name (without double "Icon")
+    mockUtils.formatSvgFileNameToPascalCase.mockReturnValue("ChevronDown");
+
+    await addCommand(["non-existent-icon"], {});
+
+    expect(console.error).toHaveBeenCalledWith(
+      "✖ Failed to generate ChevronDownIcon"
+    );
   });
 });

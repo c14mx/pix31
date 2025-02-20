@@ -1,36 +1,35 @@
 import chalk from "chalk";
 import * as path from "path";
-import { select } from "@clack/prompts";
+import prompts from "prompts";
 
-import {
-  getSvgFiles,
-  searchRelatedFileNames,
-  formatSvgFileNameToPascalCase,
-  readConfig,
-  initializeConfig,
-  ensureIndexFile,
-  appendIconExport,
-  generateIconComponent,
-  iconFileExists,
-} from "../../lib/utils";
 import { AddCLIOptions } from "../../lib/types";
-import { CONFIG_FILE_NAME, PLATFORMS } from "../../lib/constants";
+import { CONFIG_FILE_NAME, LIB_NAME, PLATFORMS } from "../../lib/constants";
+import { initializeConfig } from "../init/command";
+import {
+  readConfig,
+  ensureIndexFile,
+  getSvgFiles,
+  formatSvgFileNameToPascalCase,
+  generateIconComponent,
+  appendIconExport,
+  searchRelatedFileNames,
+  iconFileExists
+} from "@lib/utils";
 
 export async function addCommand(icons: string[], options: AddCLIOptions) {
   if (!icons.length) {
-    console.log(chalk.yellow("Type out which icons you want to install."));
+    console.log(chalk.yellow("What would you like to add?"));
     return;
   }
 
   let config = readConfig();
   if (!config) {
     console.error(
-      chalk.red("✖"),
-      `${CONFIG_FILE_NAME} config file not found. Creating config file.`
+      chalk.yellow("!"),
+      `${CONFIG_FILE_NAME} file not found. Initializing ${LIB_NAME}...`
     );
     config = await initializeConfig();
     if (!config) {
-      console.log(chalk.yellow("Operation cancelled"));
       return;
     }
   }
@@ -43,37 +42,38 @@ export async function addCommand(icons: string[], options: AddCLIOptions) {
   for (const icon of icons) {
     if (availableIcons.includes(icon)) {
       const componentName = `${formatSvgFileNameToPascalCase(icon)}Icon`;
-      const platformText = PLATFORMS[config.platform];
 
       try {
         const svgFile = svgFiles.find((file) => path.basename(file, ".svg") === icon);
-        if (!svgFile) throw new Error(`Could not find SVG file for ${icon}`);
+        if (!svgFile) throw new Error(`svg file not found ${icon}`);
 
         const wasGenerated = await generateIconComponent(config, icon, svgFile);
 
         if (wasGenerated) {
           appendIconExport(config, icon);
-          console.log(`${chalk.green("✓")} ${componentName} (${platformText})`);
+          console.log(`${chalk.green("✓")} ${componentName}`);
         }
       } catch (error) {
-        console.error(`${chalk.red("✖")} Failed to generate ${componentName}:`, error);
+        console.error(`${chalk.red("✖")} Failed to generate ${componentName}`);
       }
     } else {
       const suggestions = searchRelatedFileNames(icon, availableIcons);
-      console.log(`${chalk.red("✗")} "${icon}" not found.`);
+      console.log(`${chalk.yellow("!")} "${icon}" not found.`);
 
       if (suggestions.length > 0) {
-        console.log(`${chalk.magenta("?")} Here are other similar icons:`);
-        const selected = await select({
+        console.log(`${chalk.white("✓")} Other available icons:`);
+        const { selected } = await prompts({
+          type: "select",
+          name: "selected",
           message: "Select an icon",
-          options: [
+          choices: [
             ...suggestions.map((name) => ({
+              title: name,
               value: name,
-              label: name,
             })),
             {
+              title: "CANCEL",
               value: "cancel",
-              label: "CANCEL",
             },
           ],
         });
@@ -81,7 +81,6 @@ export async function addCommand(icons: string[], options: AddCLIOptions) {
         if (selected && selected !== "cancel") {
           const selectedIcon = selected.toString();
           const componentName = `${formatSvgFileNameToPascalCase(selectedIcon)}Icon`;
-          const platformText = PLATFORMS[config.platform];
 
           try {
             const svgFile = svgFiles.find((file) => path.basename(file, ".svg") === selectedIcon);
@@ -93,9 +92,9 @@ export async function addCommand(icons: string[], options: AddCLIOptions) {
               appendIconExport(config, selectedIcon);
             }
 
-            console.log(`${chalk.green("✓")} ${componentName} (${platformText})`);
+            console.log(`${chalk.green("✓")} ${componentName}`);
           } catch (error) {
-            console.error(`${chalk.red("✖")} Failed to generate ${componentName}:`, error);
+            console.error(`${chalk.red("✖")} Failed to generate ${componentName}`);
           }
         }
       }

@@ -2,12 +2,15 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  testMatch: ['**/*.test.ts'],
+  testMatch: [
+    "**/__tests__/**/*.[jt]s?(x)",
+    "**/?(*.)+(spec|test).[jt]s?(x)"
+  ],
   transform: {
     '^.+\\.tsx?$': ['ts-jest']
   },
   moduleNameMapper: {
-    '^@lib/(.*)$': '<rootDir>/src/lib/$1'
+    '^@lib/(.*)$': '<rootDir>/src/lib/$1',
   },
   roots: ['<rootDir>/src'],
   modulePathIgnorePatterns: ['<rootDir>/dist/'],
@@ -15,6 +18,6 @@ module.exports = {
   resetMocks: true,
   restoreMocks: true,
   transformIgnorePatterns: [
-    'node_modules/(?!(ora|chalk|prompts|.*)/)'
+    'node_modules/(?!(ora|chalk|prompts)/)'
   ]
 }; 

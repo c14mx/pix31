@@ -1,11 +1,9 @@
 import fs from "fs";
 import path from "path";
 import chalk from "chalk";
-import { Command } from "commander";
-import { parse as parseSVG } from "svgson";
 import prompts from "prompts";
+import { parse as parseSVG } from "svgson";
 
-import { addCommand } from "../commands/add/command";
 import {
   CONFIG_FILE_NAME,
   INDEX_FILE_NAME,
@@ -13,8 +11,7 @@ import {
   REACT_INDEX_TEMPLATE,
   REACT_NATIVE_INDEX_TEMPLATE,
 } from "@lib/constants";
-import { AddCLIOptions, JsonConfig, Platform } from "@lib/types";
-import { GenerationStats } from "./types";
+import { JsonConfig, GenerationStats } from "@lib/types";
 
 export function convertNumberToWord(name: string): string {
   if (!name) return "";
@@ -84,8 +81,7 @@ export const ${componentName} = React.forwardRef<any, IconProps>(({
   ...props
 }, ref) => {
   return (
-    <Icon ref={ref} {...props}>
-${pathElements}
+    <Icon ref={ref} {...props}>${pathElements ? "\n" + pathElements : ""}
     </Icon>
   );
 });
@@ -137,6 +133,9 @@ export function searchRelatedFileNames(query: string, fileNames: string[], limit
 }
 
 export function calculateSimilarity(str1: string, str2: string): number {
+  // Handle empty strings first
+  if (!str1 || !str2) return 0;
+
   const s1 = str1.toLowerCase();
   const s2 = str2.toLowerCase();
 
@@ -156,15 +155,6 @@ export function calculateSimilarity(str1: string, str2: string): number {
   return matches / maxLength;
 }
 
-export function configureAddCommand(program: Command) {
-  program
-    .command("add [icons...]")
-    .description("Add icons to your project")
-    .action(async (icons: string[], options: AddCLIOptions) => {
-      await addCommand(icons, options);
-    });
-}
-
 export function readConfig(): JsonConfig | null {
   try {
     const configPath = path.join(process.cwd(), CONFIG_FILE_NAME);
@@ -176,7 +166,7 @@ export function readConfig(): JsonConfig | null {
 }
 
 export function ensureIndexFile(config: JsonConfig): void {
-  const indexPath = path.join(process.cwd(), config.outputPath, INDEX_FILE_NAME);
+  const indexPath = path.join(process.cwd(), config.outputPath, "index.ts");
 
   if (!fs.existsSync(path.dirname(indexPath))) {
     fs.mkdirSync(path.dirname(indexPath), { recursive: true });
@@ -191,7 +181,7 @@ export function ensureIndexFile(config: JsonConfig): void {
 }
 
 export function appendIconExport(config: JsonConfig, iconName: string): void {
-  const indexPath = path.join(process.cwd(), config.outputPath, INDEX_FILE_NAME);
+  const indexPath = path.join(process.cwd(), config.outputPath, "index.ts");
   const existingContent = fs.readFileSync(indexPath, "utf-8");
   const exportLine =
     config.platform === "native"
@@ -266,12 +256,13 @@ export function getReactNativeExportLine(iconName: string): string {
 }
 
 export function getReactExportLine(iconName: string): string {
-  return `export { ${toPascalCase(iconName)}Icon } from "./${iconName}";`;
+  // First convert any numeric prefix to word
+  const nameWithWords = convertNumberToWord(iconName);
+  // Then convert to PascalCase and add Icon suffix
+  const componentName = `${toPascalCase(nameWithWords)}Icon`;
+  return `export { ${componentName} } from "./${iconName}";`;
 }
 
-/**
- * Generates React icon components from SVG files
- */
 export async function generateReactIcons(): Promise<GenerationStats> {
   const stats: GenerationStats = {
     totalFiles: 0,
@@ -336,52 +327,3 @@ export async function generateIndexFile(): Promise<void> {
   fs.writeFileSync(indexPath, indexContent);
   console.log(`Generated index file with ${tsxFiles.length} icon exports`);
 }
-
-// Execute the generation if this file is run directly
-if (require.main === module) {
-  generateIndexFile().catch(console.error);
-}
-
-jest.mock("fs", () => ({
-  ...jest.requireActual("fs"),
-  readdirSync: jest.fn(),
-  writeFileSync: jest.fn(),
-}));
-
-describe("generateIndexFile", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    (fs.readdirSync as jest.Mock).mockReturnValue(["Icon1.tsx", "Icon2.tsx", "pix31-icon.tsx"]);
-  });
-
-  it("generates index file with correct exports", async () => {
-    await generateIndexFile();
-
-    const expectedContent = expect.stringContaining("export { Icon1Icon } from './Icon1'");
-
-    expect(fs.writeFileSync).toHaveBeenCalledWith(
-      expect.stringContaining("index.ts"),
-      expectedContent
-    );
-  });
-
-  it("excludes pix31-icon.tsx from component exports", async () => {
-    await generateIndexFile();
-
-    const writeCall = (fs.writeFileSync as jest.Mock).mock.calls[0][1];
-    // Verify the base import is included
-    expect(writeCall).toContain('from "../lib/pix31-icon"');
-    // Verify pix31-icon isn't included in the component exports
-    expect(writeCall).not.toMatch(/export.*from ['"]\.\/pix31-icon['"]/);
-  });
-
-  it("logs generation summary", async () => {
-    const consoleSpy = jest.spyOn(console, "log");
-    await generateIndexFile();
-
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Generated index file with 2 icon exports")
-    );
-    consoleSpy.mockRestore();
-  });
-});
