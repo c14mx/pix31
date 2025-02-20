@@ -1,15 +1,19 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { listCommand } from "./commands/list";
+
 import { configureAddCommand } from "./lib/utils";
 import { init } from "./commands/init";
+import { browse } from "./commands/browse";
 
 const program = new Command();
 
-program.name("hako").description("Hako Icon CLI tools").version("1.0.0");
+program.name("pix31").description("A CLI to add pixelarticons to your React and React Native projects.").version("1.0.0");
 
-program.command("list").description("Browse and preview available icons").action(listCommand);
+program
+  .command("browse")
+  .description("Open Pixelarticons website in browser")
+  .action(browse);
 
 configureAddCommand(program);
 

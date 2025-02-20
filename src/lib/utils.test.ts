@@ -12,10 +12,13 @@ import {
   initializeConfig,
   getReactNativeExportLine,
   getReactExportLine,
-} from "../utils";
+  generateReactIcons,
+  generateIndexFile,
+} from "./utils";
 import fs from "fs";
 import { select, text } from "@clack/prompts";
-import { DEFAULT_OUTPUT_PATH } from "../constants";
+import { DEFAULT_OUTPUT_PATH } from "./constants";
+import path from "path";
 
 jest.mock("fs");
 jest.mock("@clack/prompts", () => ({
@@ -446,3 +449,171 @@ describe("getReactExportLine(): ", () => {
     expect(getReactExportLine(iconName)).toBe(`export { ${formattedIconName} } from "./${iconName}";`);
   })
 })
+
+describe("generateReactIcons(): ", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("successfully generates React components from SVG files", async () => {
+    // Mock file system operations
+    fs.existsSync = jest.fn().mockReturnValue(false);
+    fs.mkdirSync = jest.fn();
+    fs.readdirSync = jest.fn().mockReturnValue(["icon1.svg", "icon2.svg"]);
+    fs.readFileSync = jest.fn().mockReturnValue('<svg><path d="M1 1h1v1h-1z"/></svg>');
+    fs.writeFileSync = jest.fn();
+
+    const stats = await generateReactIcons();
+
+    expect(stats).toEqual({
+      totalFiles: 2,
+      successfulFiles: 2,
+      failedFiles: [],
+    });
+
+    expect(fs.mkdirSync).toHaveBeenCalledWith(expect.any(String), { recursive: true });
+    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
+  });
+
+  it("handles failures during component generation", async () => {
+    // Mock file system operations with one failing file
+    fs.existsSync = jest.fn().mockReturnValue(false);
+    fs.mkdirSync = jest.fn();
+    fs.readdirSync = jest.fn().mockReturnValue(["valid.svg", "invalid.svg"]);
+    fs.readFileSync = jest.fn().mockImplementation((filePath) => {
+      if (filePath.includes("invalid.svg")) {
+        return '<svg><rect width="100" height="100"/></svg>'; // No path element
+      }
+      return '<svg><path d="M1 1h1v1h-1z"/></svg>';
+    });
+    fs.writeFileSync = jest.fn();
+
+    const stats = await generateReactIcons();
+
+    expect(stats).toEqual({
+      totalFiles: 2,
+      successfulFiles: 1,
+      failedFiles: ["invalid.svg"],
+    });
+  });
+
+  it("creates output directory if it doesn't exist", async () => {
+    fs.existsSync = jest.fn().mockReturnValue(false);
+    fs.mkdirSync = jest.fn();
+    fs.readdirSync = jest.fn().mockReturnValue([]);
+    
+    await generateReactIcons();
+
+    expect(fs.mkdirSync).toHaveBeenCalledWith(
+      path.resolve("react-icons"),
+      { recursive: true }
+    );
+  });
+});
+
+jest.mock("fs", () => ({
+  ...jest.requireActual("fs"),
+  readFileSync: jest.fn(),
+  writeFileSync: jest.fn(),
+  mkdirSync: jest.fn(),
+  existsSync: jest.fn(),
+  readdirSync: jest.fn(),
+}));
+
+jest.mock("../../lib/utils", () => ({
+  extractSVGPath: jest.fn(),
+  generateReactComponent: jest.fn(),
+  formatSvgFileNameToPascalCase: jest.fn(),
+}));
+
+describe("generateReactIcons", () => {
+  const mockSvgFiles = ["icon1.svg", "icon2.svg"];
+  const mockSvgContent = '<svg><path d="M1 1"/></svg>';
+  const mockPathData = ["M1 1"];
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (fs.existsSync as jest.Mock).mockReturnValue(false);
+    (fs.readdirSync as jest.Mock).mockReturnValue(mockSvgFiles);
+    (fs.readFileSync as jest.Mock).mockReturnValue(mockSvgContent);
+    (extractSVGPath as jest.Mock).mockResolvedValue(mockPathData);
+  });
+
+  it("generates React components successfully", async () => {
+    const stats = await generateReactIcons();
+
+    expect(stats).toEqual({
+      totalFiles: 2,
+      successfulFiles: 2,
+      failedFiles: [],
+    });
+
+    expect(fs.mkdirSync).toHaveBeenCalledWith(expect.any(String), { recursive: true });
+    expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
+  });
+
+  it("handles SVG parsing failures", async () => {
+    (extractSVGPath as jest.Mock).mockResolvedValue(null);
+
+    const stats = await generateReactIcons();
+
+    expect(stats).toEqual({
+      totalFiles: 2,
+      successfulFiles: 0,
+      failedFiles: mockSvgFiles,
+    });
+  });
+
+  it("creates output directory if it does not exist", async () => {
+    await generateReactIcons();
+
+    expect(fs.existsSync).toHaveBeenCalled();
+    expect(fs.mkdirSync).toHaveBeenCalledWith(expect.stringContaining("react-icons"), {
+      recursive: true,
+    });
+  });
+});
+
+jest.mock("fs", () => ({
+  ...jest.requireActual("fs"),
+  readdirSync: jest.fn(),
+  writeFileSync: jest.fn(),
+}));
+
+describe("generateIndexFile", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (fs.readdirSync as jest.Mock).mockReturnValue(["Icon1.tsx", "Icon2.tsx", "hako-icon.tsx"]);
+  });
+
+  it("generates index file with correct exports", async () => {
+    await generateIndexFile();
+
+    const expectedContent = expect.stringContaining("export { Icon1Icon } from './Icon1'");
+
+    expect(fs.writeFileSync).toHaveBeenCalledWith(
+      expect.stringContaining("index.ts"),
+      expectedContent
+    );
+  });
+
+  it("excludes hako-icon.tsx from component exports", async () => {
+    await generateIndexFile();
+
+    const writeCall = (fs.writeFileSync as jest.Mock).mock.calls[0][1];
+    // Verify the base import is included
+    expect(writeCall).toContain('from "../lib/hako-icon"');
+    // Verify hako-icon isn't included in the component exports
+    expect(writeCall).not.toMatch(/export.*from ['"]\.\/hako-icon['"]/);
+  });
+
+  it("logs generation summary", async () => {
+    const consoleSpy = jest.spyOn(console, "log");
+    await generateIndexFile();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Generated index file with 2 icon exports")
+    );
+    consoleSpy.mockRestore();
+  });
+});

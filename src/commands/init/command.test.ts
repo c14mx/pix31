@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { init } from "../init";
+import { init } from "./command";
 import { CONFIG_FILE_NAME } from "../../lib/constants";
 import { JsonConfig } from "../../lib/types";
 

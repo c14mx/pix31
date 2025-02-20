@@ -2,10 +2,10 @@ import fs from "fs";
 import path from "path";
 import chalk from "chalk";
 import { Command } from "commander";
-import { select, confirm, text } from "@clack/prompts";
 import { parse as parseSVG } from "svgson";
+import { select, confirm, text } from "@clack/prompts";
 
-import { addCommand } from "../commands/add";
+import { addCommand } from "../commands/add/command";
 import {
   CONFIG_FILE_NAME,
   DEFAULT_OUTPUT_PATH,
@@ -16,6 +16,7 @@ import {
   REACT_NATIVE_INDEX_TEMPLATE,
 } from "@lib/constants";
 import { AddCLIOptions, JsonConfig, Platform } from "@lib/types";
+import { GenerationStats } from "./types";
 
 export function convertNumberToWord(name: string): string {
   if (!name) return "";
@@ -47,9 +48,7 @@ export async function extractSVGPath(svgContent: string): Promise<string[] | nul
     const parsed = await parseSVG(svgContent);
     const pathElements = findAllPathElements(parsed);
 
-    if (pathElements.length === 0) {
-      return null;
-    }
+    if (pathElements.length === 0) return null;
 
     return pathElements.map((element) => element.attributes.d);
   } catch (error) {
@@ -163,8 +162,6 @@ export function configureAddCommand(program: Command) {
   program
     .command("add [icons...]")
     .description("Add icons to your project")
-    .option("--web", `Generate ${PLATFORMS.web} components (default)`)
-    .option("--native", `Generate ${PLATFORMS.native} components`)
     .action(async (icons: string[], options: AddCLIOptions) => {
       await addCommand(icons, options);
     });
@@ -192,7 +189,6 @@ export async function initializeConfig(): Promise<JsonConfig | null> {
 
   if (platformChoice === "cancel" || !platformChoice) return null;
 
-  // Output path selection
   const outputPath = await text({
     message: "Where would you like to save your icons?",
     placeholder: DEFAULT_OUTPUT_PATH,
@@ -310,3 +306,120 @@ export function getReactNativeExportLine(iconName: string): string {
 export function getReactExportLine(iconName: string): string {
   return `export { ${toPascalCase(iconName)}Icon } from "./${iconName}";`;
 }
+
+/**
+ * Generates React icon components from SVG files
+ */
+export async function generateReactIcons(): Promise<GenerationStats> {
+  const stats: GenerationStats = {
+    totalFiles: 0,
+    successfulFiles: 0,
+    failedFiles: [],
+  };
+
+  const svgDir = path.resolve("svg-icons");
+  const outputDir = path.resolve("react-icons");
+
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  const svgFiles = fs.readdirSync(svgDir).filter((file) => file.endsWith(".svg"));
+  stats.totalFiles = svgFiles.length;
+
+  for (const svgFile of svgFiles) {
+    try {
+      const svgContent = fs.readFileSync(path.join(svgDir, svgFile), "utf-8");
+      const pathData = await extractSVGPath(svgContent);
+
+      if (!pathData) {
+        throw new Error("Could not extract path data from SVG");
+      }
+
+      const componentName = formatSvgFileNameToPascalCase(svgFile);
+      const componentContent = generateReactComponent(componentName + "Icon", pathData);
+      const outputPath = path.join(outputDir, `${componentName}.tsx`);
+
+      fs.writeFileSync(outputPath, componentContent);
+      stats.successfulFiles++;
+    } catch (error) {
+      stats.failedFiles.push(svgFile);
+    }
+  }
+
+  return stats;
+}
+
+export async function generateIndexFile(): Promise<void> {
+  const reactIconsDir = path.resolve("react-icons");
+  const indexPath = path.join(reactIconsDir, "index.ts");
+
+  // Update the HakoIcon export path
+  let indexContent = `export { HakoIcon, HakoIconProps } from "../lib/hako-icon";\n\n`;
+
+  // Get all .tsx files
+  const tsxFiles = fs
+    .readdirSync(reactIconsDir)
+    .filter((file) => file.endsWith(".tsx"))
+    .filter((file) => file !== "hako-icon.tsx");
+
+  // Add exports for each icon
+  for (const file of tsxFiles) {
+    const componentName = path.basename(file, ".tsx") + "Icon";
+    const importPath = "./" + path.basename(file, ".tsx");
+    indexContent += `export { ${componentName} } from '${importPath}';\n`;
+  }
+
+  // Write the index file
+  fs.writeFileSync(indexPath, indexContent);
+  console.log(`Generated index file with ${tsxFiles.length} icon exports`);
+}
+
+// Execute the generation if this file is run directly
+if (require.main === module) {
+  generateIndexFile().catch(console.error);
+}
+
+jest.mock("fs", () => ({
+  ...jest.requireActual("fs"),
+  readdirSync: jest.fn(),
+  writeFileSync: jest.fn(),
+}));
+
+describe("generateIndexFile", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (fs.readdirSync as jest.Mock).mockReturnValue(["Icon1.tsx", "Icon2.tsx", "hako-icon.tsx"]);
+  });
+
+  it("generates index file with correct exports", async () => {
+    await generateIndexFile();
+
+    const expectedContent = expect.stringContaining("export { Icon1Icon } from './Icon1'");
+
+    expect(fs.writeFileSync).toHaveBeenCalledWith(
+      expect.stringContaining("index.ts"),
+      expectedContent
+    );
+  });
+
+  it("excludes hako-icon.tsx from component exports", async () => {
+    await generateIndexFile();
+
+    const writeCall = (fs.writeFileSync as jest.Mock).mock.calls[0][1];
+    // Verify the base import is included
+    expect(writeCall).toContain('from "../lib/hako-icon"');
+    // Verify hako-icon isn't included in the component exports
+    expect(writeCall).not.toMatch(/export.*from ['"]\.\/hako-icon['"]/);
+  });
+
+  it("logs generation summary", async () => {
+    const consoleSpy = jest.spyOn(console, "log");
+    await generateIndexFile();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Generated index file with 2 icon exports")
+    );
+    consoleSpy.mockRestore();
+  });
+});

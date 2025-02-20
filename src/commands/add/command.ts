@@ -12,9 +12,9 @@ import {
   appendIconExport,
   generateIconComponent,
   iconFileExists,
-} from "../lib/utils";
-import { AddCLIOptions } from "../lib/types";
-import { CONFIG_FILE_NAME, PLATFORMS } from "../lib/constants";
+} from "../../lib/utils";
+import { AddCLIOptions } from "../../lib/types";
+import { CONFIG_FILE_NAME, PLATFORMS } from "../../lib/constants";
 
 export async function addCommand(icons: string[], options: AddCLIOptions) {
   if (!icons.length) {
