@@ -27,8 +27,8 @@ async function scrapeIcons(): Promise<ScrapingStats> {
   };
 
   try {
-    // Create svg-icons directory if it doesn't exist
-    const outputDir = path.join(process.cwd(), "svg-icons");
+    // Create pixelarticons directory if it doesn't exist
+    const outputDir = path.join(process.cwd(), "pixelarticons");
     await fs.ensureDir(outputDir);
 
     logger.info("Launching browser...");

@@ -1,107 +1,137 @@
 import fs from "fs";
-import path from "path";
+import prompts from "prompts";
 import { init } from "./command";
 import { CONFIG_FILE_NAME } from "../../lib/constants";
-import { JsonConfig } from "../../lib/types";
 
 jest.mock("fs");
-jest.mock("path");
+jest.mock("prompts", () => jest.fn());
 
-jest.mock("chalk", () => ({
-  green: (str: string) => str,
-  red: (str: string) => str,
-}));
+jest.mock("ora", () => {
+  return {
+    __esModule: true,
+    default: () => ({
+      start: jest.fn().mockReturnThis(),
+      stop: jest.fn().mockReturnThis(),
+      succeed: jest.fn().mockReturnThis(),
+      fail: jest.fn().mockReturnThis(),
+      info: jest.fn().mockReturnThis(),
+    }),
+  };
+});
 
 describe("init command", () => {
-  const mockCwd = "/fake/path";
-  const expectedConfigPath = `/fake/path/${CONFIG_FILE_NAME}`;
-
-  // Mock console methods
-  const mockConsoleLog = jest.spyOn(console, "log").mockImplementation(() => {});
-  const mockConsoleError = jest.spyOn(console, "error").mockImplementation(() => {});
-  const originalProcessExit = process.exit;
-
-  beforeAll(() => {
-    // Mock process.cwd
-    jest.spyOn(process, "cwd").mockReturnValue(mockCwd);
-    // Mock process.exit
-    // @ts-ignore - we're intentionally mocking this
-    process.exit = jest.fn();
-  });
-
-  afterAll(() => {
-    process.exit = originalProcessExit;
-  });
-
   beforeEach(() => {
-    // Reset all mocks before each test
     jest.clearAllMocks();
-    // Mock path.join to return expected path
-    (path.join as jest.Mock).mockImplementation((...args: string[]) => args.join("/"));
   });
 
-  it("creates a web config file by default", async () => {
-    // Mock fs.existsSync to return false (file doesn't exist)
+  it("Creates pix31.json config", async () => {
     (fs.existsSync as jest.Mock).mockReturnValue(false);
+    (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
+    
+    const mockPrompts = prompts as unknown as jest.Mock;
+    mockPrompts
+      .mockResolvedValueOnce({ platform: "web" })
+      .mockResolvedValueOnce({ outputPath: "src/components/icons" });
 
     await init.parseAsync(["node", "test"]);
 
-    const expectedConfig: JsonConfig = {
-      platform: "web",
-      outputPath: "src/components/icons",
-    };
-
     expect(fs.writeFileSync).toHaveBeenCalledWith(
-      mockCwd + `/${CONFIG_FILE_NAME}`,
-      JSON.stringify(expectedConfig, null, 2)
+      expect.stringContaining(CONFIG_FILE_NAME),
+      JSON.stringify({
+        platform: "web",
+        outputPath: "src/components/icons"
+      }, null, 2)
     );
-    expect(mockConsoleLog).toHaveBeenCalledWith("✓", `Successfully created ${CONFIG_FILE_NAME}`);
   });
 
-  it("creates a native config file when --native flag is used", async () => {
-    (fs.existsSync as jest.Mock).mockReturnValue(false);
-
-    await init.parseAsync(["node", "test", "--native"]);
-
-    const expectedConfig: JsonConfig = {
-      platform: "native",
-      outputPath: "src/components/icons",
-    };
-
-    expect(fs.writeFileSync).toHaveBeenCalledWith(
-      mockCwd + `/${CONFIG_FILE_NAME}`,
-      JSON.stringify(expectedConfig, null, 2)
-    );
-    expect(mockConsoleLog).toHaveBeenCalledWith("✓", `Successfully created ${CONFIG_FILE_NAME}`);
-  });
-
-  it("fails if icons.json already exists", async () => {
+  it ("If pix31.json exists prompt an overwrite", async () => {
     (fs.existsSync as jest.Mock).mockReturnValue(true);
-    (fs.writeFileSync as jest.Mock).mockClear();
+    (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
+
+    const mockPrompts = prompts as unknown as jest.Mock;
+    
+    mockPrompts
+      .mockResolvedValueOnce({ overwrite: true })
+      .mockResolvedValueOnce({ platform: "web" })
+      .mockResolvedValueOnce({ outputPath: "src/components/icons" });
 
     await init.parseAsync(["node", "test"]);
 
-    expect(fs.writeFileSync).not.toHaveBeenCalled();
-    expect(mockConsoleError).toHaveBeenCalledWith(
-      "✖",
-      `Error: ${CONFIG_FILE_NAME} already exists`
+    expect(fs.writeFileSync).toHaveBeenCalledWith(
+      expect.stringContaining(CONFIG_FILE_NAME),
+      JSON.stringify({
+        platform: "web",
+        outputPath: "src/components/icons"
+      }, null, 2)
     );
-    expect(process.exit).toHaveBeenCalledWith(1);
   });
 
-  it("handles file system errors", async () => {
-    (fs.existsSync as jest.Mock).mockReturnValue(false);
-    (fs.writeFileSync as jest.Mock).mockImplementationOnce(() => {
-      throw new Error("Write error");
-    });
+  it("Auto-inits React Native project", async () => {
+    (fs.existsSync as jest.Mock)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true);
+    
+    (fs.readFileSync as jest.Mock).mockReturnValueOnce(JSON.stringify({
+      dependencies: {
+        'react-native': '^0.70.0'
+      }
+    }));
+
+    const mockPrompts = prompts as unknown as jest.Mock;
+    mockPrompts.mockResolvedValueOnce({ outputPath: "src/components/icons" });
 
     await init.parseAsync(["node", "test"]);
 
-    expect(mockConsoleError).toHaveBeenCalledWith(
-      "✖",
-      `Error creating ${CONFIG_FILE_NAME}:`,
-      new Error("Write error")
+    expect(fs.writeFileSync).toHaveBeenCalledWith(
+      expect.stringContaining(CONFIG_FILE_NAME),
+      JSON.stringify({
+        platform: "native",
+        outputPath: "src/components/icons"
+      }, null, 2)
     );
-    expect(process.exit).toHaveBeenCalledWith(1);
+  });
+
+  it("Auto-inits React web project", async () => {
+    (fs.existsSync as jest.Mock)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true);
+    
+    (fs.readFileSync as jest.Mock).mockReturnValueOnce(JSON.stringify({
+      dependencies: {
+        'react': '^18.0.0',
+        'react-dom': '^18.0.0'
+      }
+    }));
+
+    const mockPrompts = prompts as unknown as jest.Mock;
+    mockPrompts.mockResolvedValueOnce({ outputPath: "src/components/icons" });
+
+    await init.parseAsync(["node", "test"]);
+
+    expect(fs.writeFileSync).toHaveBeenCalledWith(
+      expect.stringContaining(CONFIG_FILE_NAME),
+      JSON.stringify({
+        platform: "web",
+        outputPath: "src/components/icons"
+      }, null, 2)
+    );
+  });
+
+  it("Prompts for framework when package.json not found", async () => {
+    (fs.existsSync as jest.Mock)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false);
+
+    const mockPrompts = prompts as unknown as jest.Mock;
+    mockPrompts
+      .mockResolvedValueOnce({ platform: "web" })
+      .mockResolvedValueOnce({ outputPath: "src/components/icons" });
+
+    await init.parseAsync(["node", "test"]);
+
+    expect(mockPrompts).toHaveBeenCalledWith(expect.objectContaining({
+      type: "select",
+      name: "platform"
+    }));
   });
 });

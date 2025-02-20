@@ -4,9 +4,6 @@ node_modules/
 # Build output
 dist/
 
-# Generated files
-svg-icons/
-
 # Logs
 logs
 *.log
@@ -28,6 +25,3 @@ yarn-error.log*
 # OS files
 .DS_Store
 Thumbs.db
-
-# New directory
-/react-icons 

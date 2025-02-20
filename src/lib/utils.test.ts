@@ -26,8 +26,8 @@ jest.mock("@clack/prompts", () => ({
   text: jest.fn(),
 }));
 
-jest.mock("../constants", () => ({
-  ...jest.requireActual("../constants"),
+jest.mock("./constants", () => ({
+  ...jest.requireActual("./constants"),
   REACT_INDEX_TEMPLATE: "",
   REACT_NATIVE_INDEX_TEMPLATE: "",
 }));
@@ -416,18 +416,18 @@ describe("initializeConfig(): ", () => {
 
   it("returns null when user cancels platform selection", async () => {
     (select as jest.Mock).mockResolvedValue("cancel");
-    
+
     const config = await initializeConfig();
-    
+
     expect(config).toBeNull();
   });
 
   it("returns null when user cancels output path selection", async () => {
     (select as jest.Mock).mockResolvedValue("web");
     (text as jest.Mock).mockResolvedValue(null);
-    
+
     const config = await initializeConfig();
-    
+
     expect(config).toBeNull();
   });
 });
@@ -435,20 +435,22 @@ describe("initializeConfig(): ", () => {
 describe("getReactNativeExportLine(): ", () => {
   it("Returns the export line for React Native", async () => {
     expect(getReactNativeExportLine("home")).toBe(`export * from "./home";`);
-  })
+  });
 
   it("Does not format icon name string", async () => {
     expect(getReactNativeExportLine("abc-123-789")).toBe(`export * from "./abc-123-789";`);
-  })
-})
+  });
+});
 
 describe("getReactExportLine(): ", () => {
   it("Returns the export line for React", async () => {
     const iconName = "radio-tower";
     const formattedIconName = `${toPascalCase(iconName)}Icon`;
-    expect(getReactExportLine(iconName)).toBe(`export { ${formattedIconName} } from "./${iconName}";`);
-  })
-})
+    expect(getReactExportLine(iconName)).toBe(
+      `export { ${formattedIconName} } from "./${iconName}";`
+    );
+  });
+});
 
 describe("generateReactIcons(): ", () => {
   beforeEach(() => {
@@ -501,13 +503,10 @@ describe("generateReactIcons(): ", () => {
     fs.existsSync = jest.fn().mockReturnValue(false);
     fs.mkdirSync = jest.fn();
     fs.readdirSync = jest.fn().mockReturnValue([]);
-    
+
     await generateReactIcons();
 
-    expect(fs.mkdirSync).toHaveBeenCalledWith(
-      path.resolve("react-icons"),
-      { recursive: true }
-    );
+    expect(fs.mkdirSync).toHaveBeenCalledWith(path.resolve("react-icons"), { recursive: true });
   });
 });
 
@@ -520,7 +519,7 @@ jest.mock("fs", () => ({
   readdirSync: jest.fn(),
 }));
 
-jest.mock("../../lib/utils", () => ({
+jest.mock("./utils", () => ({
   extractSVGPath: jest.fn(),
   generateReactComponent: jest.fn(),
   formatSvgFileNameToPascalCase: jest.fn(),
@@ -583,7 +582,7 @@ jest.mock("fs", () => ({
 describe("generateIndexFile", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (fs.readdirSync as jest.Mock).mockReturnValue(["Icon1.tsx", "Icon2.tsx", "hako-icon.tsx"]);
+    (fs.readdirSync as jest.Mock).mockReturnValue(["Icon1.tsx", "Icon2.tsx", "pix31-icon.tsx"]);
   });
 
   it("generates index file with correct exports", async () => {
@@ -597,14 +596,14 @@ describe("generateIndexFile", () => {
     );
   });
 
-  it("excludes hako-icon.tsx from component exports", async () => {
+  it("excludes pix31-icon.tsx from component exports", async () => {
     await generateIndexFile();
 
     const writeCall = (fs.writeFileSync as jest.Mock).mock.calls[0][1];
     // Verify the base import is included
-    expect(writeCall).toContain('from "../lib/hako-icon"');
-    // Verify hako-icon isn't included in the component exports
-    expect(writeCall).not.toMatch(/export.*from ['"]\.\/hako-icon['"]/);
+    expect(writeCall).toContain('from "../lib/pix31-icon"');
+    // Verify pix31-icon isn't included in the component exports
+    expect(writeCall).not.toMatch(/export.*from ['"]\.\/pix31-icon['"]/);
   });
 
   it("logs generation summary", async () => {

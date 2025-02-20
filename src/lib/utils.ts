@@ -3,15 +3,13 @@ import path from "path";
 import chalk from "chalk";
 import { Command } from "commander";
 import { parse as parseSVG } from "svgson";
-import { select, confirm, text } from "@clack/prompts";
+import prompts from "prompts";
 
 import { addCommand } from "../commands/add/command";
 import {
   CONFIG_FILE_NAME,
-  DEFAULT_OUTPUT_PATH,
   INDEX_FILE_NAME,
   NUMBER_WORDS,
-  PLATFORMS,
   REACT_INDEX_TEMPLATE,
   REACT_NATIVE_INDEX_TEMPLATE,
 } from "@lib/constants";
@@ -117,9 +115,9 @@ ${componentName}.displayName = "${componentName}";
 }
 
 export function getSvgFiles(): string[] {
-  const cliDir = path.join(__dirname, '../..');
-  const svgDir = path.join(cliDir, "svg-icons");
-  
+  const cliDir = path.join(__dirname, "../..");
+  const svgDir = path.join(cliDir, "pixelarticons");
+
   return fs
     .readdirSync(svgDir)
     .filter((file) => file.endsWith(".svg"))
@@ -177,41 +175,6 @@ export function readConfig(): JsonConfig | null {
   }
 }
 
-export async function initializeConfig(): Promise<JsonConfig | null> {
-  const platformChoice = await select({
-    message: "Select your platform",
-    options: [
-      { value: "web", label: PLATFORMS.web },
-      { value: "native", label: PLATFORMS.native },
-      { value: "cancel", label: "Cancel" },
-    ],
-  });
-
-  if (platformChoice === "cancel" || !platformChoice) return null;
-
-  const outputPath = await text({
-    message: "Where would you like to save your icons?",
-    placeholder: DEFAULT_OUTPUT_PATH,
-    defaultValue: DEFAULT_OUTPUT_PATH,
-  });
-
-  if (!outputPath) return null;
-
-  const config: JsonConfig = {
-    platform: platformChoice as Platform,
-    outputPath: outputPath as string,
-  };
-
-  try {
-    fs.writeFileSync(path.join(process.cwd(), CONFIG_FILE_NAME), JSON.stringify(config, null, 2));
-    console.log(chalk.green("✓"), `Successfully created ${CONFIG_FILE_NAME}`);
-    return config;
-  } catch (error) {
-    console.error(chalk.red("✖"), `Error creating ${CONFIG_FILE_NAME}:`, error);
-    return null;
-  }
-}
-
 export function ensureIndexFile(config: JsonConfig): void {
   const indexPath = path.join(process.cwd(), config.outputPath, INDEX_FILE_NAME);
 
@@ -229,19 +192,18 @@ export function ensureIndexFile(config: JsonConfig): void {
 
 export function appendIconExport(config: JsonConfig, iconName: string): void {
   const indexPath = path.join(process.cwd(), config.outputPath, INDEX_FILE_NAME);
-  const existingContent = fs.readFileSync(indexPath, 'utf-8');
-  const exportLine = config.platform === "native" ? getReactNativeExportLine(iconName) : getReactExportLine(iconName);
-  
-  const hasExport = existingContent
-    .split('\n')
-    .some(line => line.trim() === exportLine);
-  
+  const existingContent = fs.readFileSync(indexPath, "utf-8");
+  const exportLine =
+    config.platform === "native"
+      ? getReactNativeExportLine(iconName)
+      : getReactExportLine(iconName);
+
+  const hasExport = existingContent.split("\n").some((line) => line.trim() === exportLine);
+
   if (!hasExport) {
-    const needsNewline = existingContent.length > 0 && !existingContent.endsWith('\n');
-    const contentToAppend = needsNewline 
-      ? `\n${exportLine}\n` 
-      : `${exportLine}\n`;
-    
+    const needsNewline = existingContent.length > 0 && !existingContent.endsWith("\n");
+    const contentToAppend = needsNewline ? `\n${exportLine}\n` : `${exportLine}\n`;
+
     fs.appendFileSync(indexPath, contentToAppend);
   }
 }
@@ -253,21 +215,23 @@ export function iconFileExists(config: JsonConfig, iconName: string): boolean {
 }
 
 export async function promptOverride(componentName: string, filePath: string): Promise<boolean> {
-  const response = await confirm({
+  const { override } = await prompts({
+    type: "confirm",
+    name: "override",
     message: `Would you like to override /${componentName}.tsx`,
   });
 
-  return response === true;
+  return override === true;
 }
 
 export async function generateIconComponent(
-  config: JsonConfig, 
-  iconName: string, 
+  config: JsonConfig,
+  iconName: string,
   svgFilePath: string
 ): Promise<boolean> {
   const outputDir = path.join(process.cwd(), config.outputPath);
   const componentName = `${formatSvgFileNameToPascalCase(iconName)}Icon`;
-  
+
   if (iconFileExists(config, iconName)) {
     console.log(`${chalk.yellow("!")} ${componentName} already exists in ${config.outputPath}`);
     const shouldOverride = await promptOverride(componentName, config.outputPath);
@@ -276,25 +240,23 @@ export async function generateIconComponent(
     }
   }
 
-  const svgContent = fs.readFileSync(svgFilePath, 'utf-8');
+  const svgContent = fs.readFileSync(svgFilePath, "utf-8");
   const pathData = await extractSVGPath(svgContent);
-  
+
   if (!pathData) {
     throw new Error(`Failed to extract path data from ${iconName}`);
   }
 
-  const componentContent = config.platform === 'native' 
-    ? generateReactNativeComponent(componentName, pathData)
-    : generateReactComponent(componentName, pathData);
+  const componentContent =
+    config.platform === "native"
+      ? generateReactNativeComponent(componentName, pathData)
+      : generateReactComponent(componentName, pathData);
 
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  fs.writeFileSync(
-    path.join(outputDir, `${iconName}.tsx`),
-    componentContent
-  );
+  fs.writeFileSync(path.join(outputDir, `${iconName}.tsx`), componentContent);
 
   return true;
 }
@@ -317,7 +279,7 @@ export async function generateReactIcons(): Promise<GenerationStats> {
     failedFiles: [],
   };
 
-  const svgDir = path.resolve("svg-icons");
+  const svgDir = path.resolve("pixelarticons");
   const outputDir = path.resolve("react-icons");
 
   if (!fs.existsSync(outputDir)) {
@@ -354,14 +316,14 @@ export async function generateIndexFile(): Promise<void> {
   const reactIconsDir = path.resolve("react-icons");
   const indexPath = path.join(reactIconsDir, "index.ts");
 
-  // Update the HakoIcon export path
-  let indexContent = `export { HakoIcon, HakoIconProps } from "../lib/hako-icon";\n\n`;
+  // Update the Pix31Icon export path
+  let indexContent = `export { Pix31Icon, Pix31IconProps } from "../lib/pix31-icon";\n\n`;
 
   // Get all .tsx files
   const tsxFiles = fs
     .readdirSync(reactIconsDir)
     .filter((file) => file.endsWith(".tsx"))
-    .filter((file) => file !== "hako-icon.tsx");
+    .filter((file) => file !== "pix31-icon.tsx");
 
   // Add exports for each icon
   for (const file of tsxFiles) {
@@ -389,7 +351,7 @@ jest.mock("fs", () => ({
 describe("generateIndexFile", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (fs.readdirSync as jest.Mock).mockReturnValue(["Icon1.tsx", "Icon2.tsx", "hako-icon.tsx"]);
+    (fs.readdirSync as jest.Mock).mockReturnValue(["Icon1.tsx", "Icon2.tsx", "pix31-icon.tsx"]);
   });
 
   it("generates index file with correct exports", async () => {
@@ -403,14 +365,14 @@ describe("generateIndexFile", () => {
     );
   });
 
-  it("excludes hako-icon.tsx from component exports", async () => {
+  it("excludes pix31-icon.tsx from component exports", async () => {
     await generateIndexFile();
 
     const writeCall = (fs.writeFileSync as jest.Mock).mock.calls[0][1];
     // Verify the base import is included
-    expect(writeCall).toContain('from "../lib/hako-icon"');
-    // Verify hako-icon isn't included in the component exports
-    expect(writeCall).not.toMatch(/export.*from ['"]\.\/hako-icon['"]/);
+    expect(writeCall).toContain('from "../lib/pix31-icon"');
+    // Verify pix31-icon isn't included in the component exports
+    expect(writeCall).not.toMatch(/export.*from ['"]\.\/pix31-icon['"]/);
   });
 
   it("logs generation summary", async () => {

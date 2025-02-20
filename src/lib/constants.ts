@@ -28,7 +28,7 @@ export const DEFAULT_NATIVE_CONFIG: JsonConfig = {
   outputPath: "src/components/icons",
 };
 
-export const CONFIG_FILE_NAME = "icons.json";
+export const CONFIG_FILE_NAME = "pix31.json";
 export const INDEX_FILE_NAME = "index.tsx";
 export const DEFAULT_OUTPUT_PATH = "src/components/icons";
 

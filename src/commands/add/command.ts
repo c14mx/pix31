@@ -18,17 +18,16 @@ import { CONFIG_FILE_NAME, PLATFORMS } from "../../lib/constants";
 
 export async function addCommand(icons: string[], options: AddCLIOptions) {
   if (!icons.length) {
-    console.log(
-      chalk.yellow(
-        'Type out which icons you want to install. Run "hako list" to browse available icon names.'
-      )
-    );
+    console.log(chalk.yellow("Type out which icons you want to install."));
     return;
   }
 
   let config = readConfig();
   if (!config) {
-    console.error(chalk.red("✖"), `${CONFIG_FILE_NAME} config file not found. Creating config file.`);
+    console.error(
+      chalk.red("✖"),
+      `${CONFIG_FILE_NAME} config file not found. Creating config file.`
+    );
     config = await initializeConfig();
     if (!config) {
       console.log(chalk.yellow("Operation cancelled"));
@@ -45,13 +44,13 @@ export async function addCommand(icons: string[], options: AddCLIOptions) {
     if (availableIcons.includes(icon)) {
       const componentName = `${formatSvgFileNameToPascalCase(icon)}Icon`;
       const platformText = PLATFORMS[config.platform];
-      
+
       try {
-        const svgFile = svgFiles.find(file => path.basename(file, '.svg') === icon);
+        const svgFile = svgFiles.find((file) => path.basename(file, ".svg") === icon);
         if (!svgFile) throw new Error(`Could not find SVG file for ${icon}`);
 
         const wasGenerated = await generateIconComponent(config, icon, svgFile);
-        
+
         if (wasGenerated) {
           appendIconExport(config, icon);
           console.log(`${chalk.green("✓")} ${componentName} (${platformText})`);
@@ -83,17 +82,17 @@ export async function addCommand(icons: string[], options: AddCLIOptions) {
           const selectedIcon = selected.toString();
           const componentName = `${formatSvgFileNameToPascalCase(selectedIcon)}Icon`;
           const platformText = PLATFORMS[config.platform];
-          
+
           try {
-            const svgFile = svgFiles.find(file => path.basename(file, '.svg') === selectedIcon);
+            const svgFile = svgFiles.find((file) => path.basename(file, ".svg") === selectedIcon);
             if (!svgFile) throw new Error(`Could not find SVG file for ${selectedIcon}`);
 
             await generateIconComponent(config, selectedIcon, svgFile);
-            
+
             if (!iconFileExists(config, selectedIcon)) {
               appendIconExport(config, selectedIcon);
             }
-            
+
             console.log(`${chalk.green("✓")} ${componentName} (${platformText})`);
           } catch (error) {
             console.error(`${chalk.red("✖")} Failed to generate ${componentName}:`, error);
