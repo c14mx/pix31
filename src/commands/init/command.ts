@@ -24,23 +24,18 @@ export const init = new Command()
 
 async function detectFramework(): Promise<Platform | null> {
   try {
-    const packagePath = path.join(process.cwd(), 'package.json');
+    const packagePath = path.join(process.cwd(), "package.json");
     if (!fs.existsSync(packagePath)) {
       return null;
     }
 
-    const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
+    const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf-8"));
     const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
 
-    if (deps['react-native']) {
-      return 'native';
-    }
+    if (deps["react-native"]) return "native";
 
-    // Check for web dependencies
-    const webDeps = ['react', 'react-dom', 'next', 'gatsby', 'vite', 'webpack'];
-    if (webDeps.some(dep => deps[dep])) {
-      return 'web';
-    }
+    const webDeps = ["react", "react-dom", "next", "gatsby", "vite", "webpack"];
+    if (webDeps.some((dep) => deps[dep])) return "web";
 
     return null;
   } catch (error) {
@@ -69,9 +64,9 @@ async function initializeConfig(): Promise<JsonConfig | null> {
     }
 
     spinner.stop();
-    
+
     let platformType = await detectFramework();
-    
+
     if (!platformType) {
       const { platform } = await prompts({
         type: "select",
@@ -79,7 +74,7 @@ async function initializeConfig(): Promise<JsonConfig | null> {
         message: "Which framework are you using?",
         choices: [
           { title: "React", value: "web" },
-          { title: "React Native", value: "native" }
+          { title: "React Native", value: "native" },
         ],
         initial: 0,
       });
@@ -88,7 +83,7 @@ async function initializeConfig(): Promise<JsonConfig | null> {
         spinner.info("Operation cancelled");
         return null;
       }
-      
+
       platformType = platform;
     }
 
