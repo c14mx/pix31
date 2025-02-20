@@ -1,5 +1,8 @@
 import { Platform, JsonConfig } from "./types";
 
+export const LIB_NAME = "pix31";
+export const PIXELARTICONS_URL = "https://pixelarticons.com/";
+
 export const NUMBER_WORDS: { [key: string]: string } = {
   "0": "Zero-",
   "1": "One-",
@@ -28,7 +31,7 @@ export const DEFAULT_NATIVE_CONFIG: JsonConfig = {
   outputPath: "src/components/icons",
 };
 
-export const CONFIG_FILE_NAME = "pix31.json";
+export const CONFIG_FILE_NAME = `${LIB_NAME}.json`;
 export const INDEX_FILE_NAME = "index.tsx";
 export const DEFAULT_OUTPUT_PATH = "src/components/icons";
 

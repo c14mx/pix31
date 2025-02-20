@@ -1,7 +1,7 @@
 import fs from "fs";
 import prompts from "prompts";
 import { init } from "./command";
-import { CONFIG_FILE_NAME } from "../../lib/constants";
+import { CONFIG_FILE_NAME, LIB_NAME } from "../../lib/constants";
 
 jest.mock("fs");
 jest.mock("prompts", () => jest.fn());
@@ -19,7 +19,7 @@ jest.mock("ora", () => {
   };
 });
 
-describe("init command", () => {
+describe(`npx ${LIB_NAME} init`, () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });

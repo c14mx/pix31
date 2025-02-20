@@ -107,7 +107,10 @@ async function initializeConfig(): Promise<JsonConfig | null> {
     };
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-    spinner.succeed(`Successfully created ${CONFIG_FILE_NAME}`);
+    spinner.succeed("Config created!");
+    console.log("\nCommands you can run:");
+    console.log("  npx pix31 add [icon-name]   Add icons to your project");
+    console.log("  npx pix31 browse            View all available icons");
     return config;
   } catch (error) {
     spinner.fail(`Error creating ${CONFIG_FILE_NAME}`);
