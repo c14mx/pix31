@@ -1,12 +1,12 @@
-import { CONFIG_FILE_NAME } from "@lib/constants";
+import { CONFIG_FILE_NAME, LIB_NAME, PLATFORMS } from "@lib/constants";
 import { JsonConfig, Platform } from "@lib/types";
-import { DEFAULT_OUTPUT_PATH } from "@lib/constants";
 import chalk from "chalk";
 import { Command } from "commander";
 import path from "path";
 import fs from "fs";
 import ora from "ora";
 import prompts from "prompts";
+import { execSync } from "child_process";
 
 export const getConfigPath = () => path.join(process.cwd(), CONFIG_FILE_NAME);
 
@@ -43,78 +43,117 @@ async function detectFramework(): Promise<Platform | null> {
   }
 }
 
+function checkPackageExists(packageName: string): boolean {
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), "package.json"), "utf-8"));
+    return !!(
+      (packageJson.dependencies && packageJson.dependencies[packageName]) ||
+      (packageJson.devDependencies && packageJson.devDependencies[packageName])
+    );
+  } catch (error) {
+    return false;
+  }
+}
+
+async function installDependencies(platform: "web" | "native"): Promise<void> {
+  if (platform === "native") {
+    if (!checkPackageExists("react-native-svg")) {
+      const spinner = ora("Installing react-native-svg...").start();
+      try {
+        execSync("npm install react-native-svg", { stdio: "pipe" });
+        spinner.succeed("Installed react-native-svg");
+      } catch (error) {
+        spinner.fail("Failed to install react-native-svg");
+        throw error;
+      }
+    }
+  } else {
+    const missingDeps = [];
+    const missingDevDeps = [];
+
+    if (!checkPackageExists("tailwind-merge")) missingDeps.push("tailwind-merge");
+    if (!checkPackageExists("tailwindcss-animate")) missingDeps.push("tailwindcss-animate");
+    if (!checkPackageExists("tailwindcss")) missingDevDeps.push("tailwindcss");
+
+    if (missingDeps.length > 0) {
+      const spinner = ora(`Installing dependencies: ${missingDeps.join(", ")}...`).start();
+      try {
+        execSync(`npm install ${missingDeps.join(" ")}`, { stdio: "pipe" });
+        spinner.succeed("Installed dependencies");
+      } catch (error) {
+        spinner.fail("Failed to install dependencies");
+        throw error;
+      }
+    }
+
+    if (missingDevDeps.length > 0) {
+      const spinner = ora(`Installing dev dependencies: ${missingDevDeps.join(", ")}...`).start();
+      try {
+        execSync(`npm install -D ${missingDevDeps.join(" ")}`, { stdio: "pipe" });
+        spinner.succeed("Installed dev dependencies");
+      } catch (error) {
+        spinner.fail("Failed to install dev dependencies");
+        throw error;
+      }
+    }
+  }
+}
+
 export async function initializeConfig(): Promise<JsonConfig | null> {
-  const spinner = ora("Initializing config").start();
   const configPath = getConfigPath();
 
-  try {
-    if (fs.existsSync(configPath)) {
-      spinner.stop();
-      const { overwrite } = await prompts({
-        type: "confirm",
-        name: "overwrite",
-        message: `${CONFIG_FILE_NAME} already exists. Would you like to overwrite it?`,
-        initial: false,
-      });
-
-      if (!overwrite) {
-        spinner.fail(`${CONFIG_FILE_NAME} already exists`);
-        return null;
-      }
-    }
-
-    spinner.stop();
-
-    let platformType = await detectFramework();
-
-    if (!platformType) {
-      const { platform } = await prompts({
-        type: "select",
-        name: "platform",
-        message: "Which framework are you using?",
-        choices: [
-          { title: "React", value: "web" },
-          { title: "React Native", value: "native" },
-        ],
-        initial: 0,
-      });
-
-      if (platform === undefined) {
-        spinner.info("Operation cancelled");
-        return null;
-      }
-
-      platformType = platform;
-    }
-
-    const { outputPath } = await prompts({
-      type: "text",
-      name: "outputPath",
-      message: "?",
-      initial: DEFAULT_OUTPUT_PATH,
+  // Check if config exists
+  if (fs.existsSync(configPath)) {
+    const { overwrite } = await prompts({
+      type: "confirm",
+      name: "overwrite",
+      message: `${CONFIG_FILE_NAME} already exists. Would you like to overwrite it?`,
+      initial: false,
     });
 
-    if (!outputPath) {
-      spinner.info("Operation cancelled");
+    if (!overwrite) {
       return null;
     }
+  }
 
-    spinner.start("Creating config file");
+  // Try to detect framework first
+  let platform = await detectFramework();
+
+  // If framework couldn't be detected, ask user
+  if (!platform) {
+    const response = await prompts({
+      type: "select",
+      name: "platform",
+      message: "Select your platform",
+      choices: [
+        { title: PLATFORMS.web, value: "web" },
+        { title: PLATFORMS.native, value: "native" },
+      ],
+    });
+
+    if (!response.platform) return null;
+    platform = response.platform;
+  } else {
+    console.log(chalk.green(`✓ Detected ${PLATFORMS[platform]} project`));
+  }
+
+  try {
+    await installDependencies(platform as "web" | "native");
 
     const config: JsonConfig = {
-      platform: platformType as Platform,
-      outputPath,
+      platform: platform as Platform,
+      outputPath: "src/components/icons",
     };
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-    spinner.succeed("Config created!");
-    console.log("\nCommands you can run:");
-    console.log("  npx pix31 add [icon-name]   Add icons to your project");
-    console.log("  npx pix31 browse            View all available icons");
+
+    console.log("");
+    console.log("Commands you can run:");
+    console.log(`  npx ${LIB_NAME} add [icon-name]   Add icons to your project`);
+
     return config;
   } catch (error) {
-    spinner.fail(`Error creating ${CONFIG_FILE_NAME}`);
-    console.error(error);
+    console.error(chalk.red("Failed to initialize config:"), error);
     return null;
   }
 }

@@ -1,23 +1,21 @@
+import { execSync } from "child_process";
 import fs from "fs";
 import prompts from "prompts";
-import { init } from "./command";
+import { initializeConfig } from "./command";
 import { CONFIG_FILE_NAME, LIB_NAME } from "../../lib/constants";
 
 jest.mock("fs");
-jest.mock("prompts", () => jest.fn());
-
-jest.mock("ora", () => {
-  return {
-    __esModule: true,
-    default: () => ({
-      start: jest.fn().mockReturnThis(),
-      stop: jest.fn().mockReturnThis(),
-      succeed: jest.fn().mockReturnThis(),
-      fail: jest.fn().mockReturnThis(),
-      info: jest.fn().mockReturnThis(),
-    }),
-  };
-});
+jest.mock("prompts");
+jest.mock("child_process");
+jest.mock("ora", () => ({
+  __esModule: true,
+  default: () => ({
+    start: jest.fn().mockReturnThis(),
+    stop: jest.fn().mockReturnThis(),
+    succeed: jest.fn().mockReturnThis(),
+    fail: jest.fn().mockReturnThis(),
+  }),
+}));
 
 describe(`npx ${LIB_NAME} init`, () => {
   beforeEach(() => {
@@ -33,7 +31,7 @@ describe(`npx ${LIB_NAME} init`, () => {
       .mockResolvedValueOnce({ platform: "web" })
       .mockResolvedValueOnce({ outputPath: "src/components/icons" });
 
-    await init.parseAsync(["node", "test"]);
+    await initializeConfig();
 
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       expect.stringContaining(CONFIG_FILE_NAME),
@@ -59,7 +57,7 @@ describe(`npx ${LIB_NAME} init`, () => {
       .mockResolvedValueOnce({ platform: "web" })
       .mockResolvedValueOnce({ outputPath: "src/components/icons" });
 
-    await init.parseAsync(["node", "test"]);
+    await initializeConfig();
 
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       expect.stringContaining(CONFIG_FILE_NAME),
@@ -88,7 +86,7 @@ describe(`npx ${LIB_NAME} init`, () => {
     const mockPrompts = prompts as unknown as jest.Mock;
     mockPrompts.mockResolvedValueOnce({ outputPath: "src/components/icons" });
 
-    await init.parseAsync(["node", "test"]);
+    await initializeConfig();
 
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       expect.stringContaining(CONFIG_FILE_NAME),
@@ -118,7 +116,7 @@ describe(`npx ${LIB_NAME} init`, () => {
     const mockPrompts = prompts as unknown as jest.Mock;
     mockPrompts.mockResolvedValueOnce({ outputPath: "src/components/icons" });
 
-    await init.parseAsync(["node", "test"]);
+    await initializeConfig();
 
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       expect.stringContaining(CONFIG_FILE_NAME),
@@ -141,7 +139,7 @@ describe(`npx ${LIB_NAME} init`, () => {
       .mockResolvedValueOnce({ platform: "web" })
       .mockResolvedValueOnce({ outputPath: "src/components/icons" });
 
-    await init.parseAsync(["node", "test"]);
+    await initializeConfig();
 
     expect(mockPrompts).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -149,5 +147,74 @@ describe(`npx ${LIB_NAME} init`, () => {
         name: "platform",
       })
     );
+  });
+});
+
+describe("initializeConfig()", () => {
+  const mockPackageJson = {
+    dependencies: {},
+    devDependencies: {},
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (fs.existsSync as jest.Mock).mockReturnValue(false);
+    (fs.readFileSync as jest.Mock).mockReturnValue(JSON.stringify(mockPackageJson));
+  });
+
+  it("Installs react-native-svg for React Native", async () => {
+    (fs.readFileSync as jest.Mock)
+      .mockReturnValueOnce(JSON.stringify({ dependencies: { "react-native": "0.70.0" } }))
+      .mockReturnValueOnce(JSON.stringify({ dependencies: {} }));
+
+    (prompts as unknown as jest.Mock).mockResolvedValueOnce({ platform: "native" });
+    
+    await initializeConfig();
+
+    expect(execSync).toHaveBeenCalledWith(
+      "npm install react-native-svg",
+      expect.any(Object)
+    );
+  });
+
+  it("Installs Tailwind deps for React projects", async () => {
+    (fs.readFileSync as jest.Mock)
+      .mockReturnValueOnce(JSON.stringify({ dependencies: { "react": "18.0.0" } }))
+      .mockReturnValueOnce(JSON.stringify({ dependencies: {} }));
+
+    (prompts as unknown as jest.Mock).mockResolvedValueOnce({ platform: "web" });
+    
+    await initializeConfig();
+
+    expect(execSync).toHaveBeenCalledWith(
+      "npm install tailwind-merge tailwindcss-animate",
+      expect.any(Object)
+    );
+    expect(execSync).toHaveBeenCalledWith(
+      "npm install -D tailwindcss",
+      expect.any(Object)
+    );
+  });
+
+  it("Skips installation if dependencies already exist", async () => {
+    const fullPackageJson = {
+      dependencies: {
+        "react": "18.0.0",
+        "tailwind-merge": "1.0.0",
+        "tailwindcss-animate": "1.0.0",
+      },
+      devDependencies: {
+        "tailwindcss": "3.0.0",
+      },
+    };
+
+    (fs.readFileSync as jest.Mock)
+      .mockReturnValue(JSON.stringify(fullPackageJson));
+
+    (prompts as unknown as jest.Mock).mockResolvedValueOnce({ platform: "web" });
+    
+    await initializeConfig();
+
+    expect(execSync).not.toHaveBeenCalled();
   });
 });

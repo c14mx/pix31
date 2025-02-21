@@ -6,7 +6,6 @@ import { parse as parseSVG } from "svgson";
 
 import {
   CONFIG_FILE_NAME,
-  INDEX_FILE_NAME,
   NUMBER_WORDS,
   REACT_INDEX_TEMPLATE,
   REACT_NATIVE_INDEX_TEMPLATE,
@@ -54,10 +53,7 @@ export async function extractSVGPath(svgContent: string): Promise<string[] | nul
 
 export function findAllPathElements(node: any): any[] {
   let paths: any[] = [];
-
-  if (node.name === "path") {
-    paths.push(node);
-  }
+  if (node.name === "path") paths.push(node);
 
   if (node.children) {
     for (const child of node.children) {
@@ -133,7 +129,6 @@ export function searchRelatedFileNames(query: string, fileNames: string[], limit
 }
 
 export function calculateSimilarity(str1: string, str2: string): number {
-  // Handle empty strings first
   if (!str1 || !str2) return 0;
 
   const s1 = str1.toLowerCase();
@@ -256,9 +251,7 @@ export function getReactNativeExportLine(iconName: string): string {
 }
 
 export function getReactExportLine(iconName: string): string {
-  // First convert any numeric prefix to word
   const nameWithWords = convertNumberToWord(iconName);
-  // Then convert to PascalCase and add Icon suffix
   const componentName = `${toPascalCase(nameWithWords)}Icon`;
   return `export { ${componentName} } from "./${iconName}";`;
 }
@@ -307,23 +300,19 @@ export async function generateIndexFile(): Promise<void> {
   const reactIconsDir = path.resolve("react-icons");
   const indexPath = path.join(reactIconsDir, "index.ts");
 
-  // Update the Pix31Icon export path
   let indexContent = `export { Pix31Icon, Pix31IconProps } from "../lib/pix31-icon";\n\n`;
 
-  // Get all .tsx files
   const tsxFiles = fs
     .readdirSync(reactIconsDir)
     .filter((file) => file.endsWith(".tsx"))
     .filter((file) => file !== "pix31-icon.tsx");
 
-  // Add exports for each icon
   for (const file of tsxFiles) {
     const componentName = path.basename(file, ".tsx") + "Icon";
     const importPath = "./" + path.basename(file, ".tsx");
     indexContent += `export { ${componentName} } from '${importPath}';\n`;
   }
 
-  // Write the index file
   fs.writeFileSync(indexPath, indexContent);
   console.log(`Generated index file with ${tsxFiles.length} icon exports`);
 }

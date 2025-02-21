@@ -1,4 +1,4 @@
-// Mock all utils with proper types
+
 const mockUtils = {
   readConfig: jest.fn(),
   getSvgFiles: jest.fn(),
@@ -10,7 +10,6 @@ const mockUtils = {
   searchRelatedFileNames: jest.fn(),
 };
 
-// All mocks need to be defined before imports
 jest.mock("../../lib/utils", () => mockUtils);
 jest.mock("path", () => ({
   basename: jest.fn((file, ext) => {
@@ -37,7 +36,6 @@ jest.mock("ora", () => ({
 }));
 jest.mock("prompts", () => jest.fn());
 
-// Add this with other mocks at the top
 jest.mock('chalk', () => ({
   yellow: (str: string) => str,
   red: (str: string) => str,
@@ -45,17 +43,15 @@ jest.mock('chalk', () => ({
   white: (str: string) => str,
 }));
 
-// Imports come after all mocks
 import chalk from "chalk";
 import prompts from "prompts";
 import { addCommand } from "./command";
-import { LIB_NAME, CONFIG_FILE_NAME, PLATFORMS } from "../../lib/constants";
+import { LIB_NAME, CONFIG_FILE_NAME } from "../../lib/constants";
 
 describe(`npx ${LIB_NAME} add`, () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Reset all utils mocks to default values
     mockUtils.readConfig.mockReturnValue({
       platform: "web",
       outputPath: "src/components/icons"
@@ -66,11 +62,9 @@ describe(`npx ${LIB_NAME} add`, () => {
     mockUtils.iconFileExists.mockReturnValue(false);
     mockUtils.searchRelatedFileNames.mockReturnValue(["chevron-down"]);
 
-    // Mock console methods properly
     jest.spyOn(console, 'log').mockImplementation();
     jest.spyOn(console, 'error').mockImplementation();
 
-    // Mock prompts to return undefined by default
     (prompts as unknown as jest.Mock).mockResolvedValue({ selected: undefined });
   });
 
@@ -87,7 +81,7 @@ describe(`npx ${LIB_NAME} add`, () => {
   });
 
   it("Initializes config when not found", async () => {
-    mockUtils.readConfig.mockReturnValueOnce(null);  // Only return null for this test
+    mockUtils.readConfig.mockReturnValueOnce(null);
     
     await addCommand(["some-icon"], {});
 
@@ -98,49 +92,40 @@ describe(`npx ${LIB_NAME} add`, () => {
   });
 
   it("Generates icon component and appends export", async () => {
-    // Mock getSvgFiles to return the file we want
     const svgFile = "path/to/chevron-down.svg";
     mockUtils.getSvgFiles.mockReturnValue([svgFile]);
 
-    // Mock path.basename to return the icon name for both checks
     const pathMock = jest.requireMock("path");
     pathMock.basename.mockImplementation((file: string, ext?: string) => {
       if (ext === ".svg") return "chevron-down";
       return file;
     });
 
-    // Mock searchRelatedFileNames to return empty array to avoid prompts flow
     mockUtils.searchRelatedFileNames.mockReturnValue([]);
 
     await addCommand(["chevron-down"], {});
 
-    // Check if generateIconComponent was called with correct args
     expect(mockUtils.generateIconComponent).toHaveBeenCalledWith(
       { platform: "web", outputPath: "src/components/icons" },
       "chevron-down",
-      svgFile  // Use the exact same file path
+      svgFile
     );
 
-    // Check if appendIconExport was called
     expect(mockUtils.appendIconExport).toHaveBeenCalledWith(
       { platform: "web", outputPath: "src/components/icons" },
       "chevron-down"
     );
 
-    // Check success message
     expect(console.log).toHaveBeenCalledWith(
       `✓ ChevronDownIcon`
     );
   });
 
   it("Handles icon generation failure", async () => {
-    // Mock prompts to return the icon name
     (prompts as unknown as jest.Mock).mockResolvedValueOnce({ selected: "chevron-down" });
     
-    // Mock the error case
     mockUtils.generateIconComponent.mockRejectedValueOnce(new Error("Generation failed"));
     
-    // Mock formatSvgFileNameToPascalCase to return correct name (without double "Icon")
     mockUtils.formatSvgFileNameToPascalCase.mockReturnValue("ChevronDown");
 
     await addCommand(["non-existent-icon"], {});
