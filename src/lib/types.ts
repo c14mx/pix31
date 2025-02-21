@@ -24,3 +24,17 @@ export interface JsonConfig {
   platform: Platform;
   outputPath: string;
 }
+
+export interface SVGNode {
+  name: string;
+  attributes?: Record<string, string>;
+  children?: SVGNode[];
+}
+
+export type OraMock = {
+  start: () => OraMock;
+  stop: () => OraMock;
+  succeed: () => OraMock;
+  fail: () => OraMock;
+  info: () => OraMock;
+};

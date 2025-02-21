@@ -1,9 +1,26 @@
 {
   "parser": "@typescript-eslint/parser",
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
   "plugins": ["@typescript-eslint"],
   "rules": {
     "no-warning-comments": "error",
     "no-inline-comments": "error",
-    "no-multi-line-comments": "error"
+    "multiline-comment-style": ["error", "starred-block"],
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/explicit-function-return-type": "error"
+  },
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module",
+    "project": ["./tsconfig.json", "./tsconfig.test.json"]
+  },
+  "root": true,
+  "env": {
+    "node": true,
+    "jest": true,
+    "es6": true
   }
 } 

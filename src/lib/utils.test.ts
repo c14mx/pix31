@@ -1,8 +1,24 @@
-import { convertNumberToWord, toPascalCase, extractSVGPath, findAllPathElements, generateReactComponent, generateReactNativeComponent, getSvgFiles, searchRelatedFileNames, calculateSimilarity, readConfig, getReactNativeExportLine, getReactExportLine, ensureIndexFile, appendIconExport, iconFileExists, generateIconComponent, promptOverride } from "./utils";
+import {
+  convertNumberToWord,
+  toPascalCase,
+  extractSVGPath,
+  findAllPathElements,
+  generateReactComponent,
+  generateReactNativeComponent,
+  getSvgFiles,
+  searchRelatedFileNames,
+  calculateSimilarity,
+  readConfig,
+  getReactNativeExportLine,
+  getReactExportLine,
+  ensureIndexFile,
+  appendIconExport,
+  iconFileExists,
+  generateIconComponent,
+} from "./utils";
 import fs from "fs";
 import path from "path";
 import { JsonConfig, Platform } from "./types";
-import prompts from "prompts";
 
 describe("convertNumberToWord(): ", () => {
   it("Replaces number prefix with NUMBER_WORDS", () => {
@@ -40,7 +56,7 @@ describe("toPascalCase(): ", () => {
 describe("extractSVGPath(): ", () => {
   // Mock console.error before tests
   beforeEach(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, "error").mockImplementation(() => {});
   });
 
   // Restore console.error after tests
@@ -66,10 +82,7 @@ describe("extractSVGPath(): ", () => {
       </svg>
     `;
     const paths = await extractSVGPath(svgContent);
-    expect(paths).toEqual([
-      "M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z",
-      "M4 4h16v16H4z"
-    ]);
+    expect(paths).toEqual(["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z", "M4 4h16v16H4z"]);
   });
 
   it("returns null for SVG without paths", async () => {
@@ -97,44 +110,40 @@ describe("findAllPathElements(): ", () => {
       name: "svg",
       children: [
         { name: "path", attributes: { d: "M1 1h1" } },
-        { name: "path", attributes: { d: "M2 2h2" } }
-      ]
+        { name: "path", attributes: { d: "M2 2h2" } },
+      ],
     };
-    
+
     const paths = findAllPathElements(node);
     expect(paths).toHaveLength(2);
-    expect(paths[0].attributes.d).toBe("M1 1h1");
-    expect(paths[1].attributes.d).toBe("M2 2h2");
+    expect(paths[0]?.attributes?.d).toBe("M1 1h1");
+    expect(paths[1]?.attributes?.d).toBe("M2 2h2");
   });
 
   it("finds nested path elements", () => {
     const node = {
       name: "svg",
       children: [
-        { 
+        {
           name: "g",
-          children: [
-            { name: "path", attributes: { d: "M1 1h1" } }
-          ]
+          children: [{ name: "path", attributes: { d: "M1 1h1" } }],
         },
-        { name: "path", attributes: { d: "M2 2h2" } }
-      ]
+        { name: "path", attributes: { d: "M2 2h2" } },
+      ],
     };
-    
+
     const paths = findAllPathElements(node);
     expect(paths).toHaveLength(2);
-    expect(paths[0].attributes.d).toBe("M1 1h1");
-    expect(paths[1].attributes.d).toBe("M2 2h2");
+    expect(paths[0]?.attributes?.d).toBe("M1 1h1");
+    expect(paths[1]?.attributes?.d).toBe("M2 2h2");
   });
 
   it("returns empty array when no paths found", () => {
     const node = {
       name: "svg",
-      children: [
-        { name: "rect", attributes: { width: "10", height: "10" } }
-      ]
+      children: [{ name: "rect", attributes: { width: "10", height: "10" } }],
     };
-    
+
     const paths = findAllPathElements(node);
     expect(paths).toHaveLength(0);
   });
@@ -142,12 +151,12 @@ describe("findAllPathElements(): ", () => {
   it("handles nodes without children", () => {
     const node = {
       name: "path",
-      attributes: { d: "M1 1h1" }
+      attributes: { d: "M1 1h1" },
     };
-    
+
     const paths = findAllPathElements(node);
     expect(paths).toHaveLength(1);
-    expect(paths[0].attributes.d).toBe("M1 1h1");
+    expect(paths[0]?.attributes?.d).toBe("M1 1h1");
   });
 });
 
@@ -155,7 +164,7 @@ describe("generateReactComponent(): ", () => {
   it("generates component with single path", () => {
     const componentName = "HomeIcon";
     const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"];
-    
+
     const result = generateReactComponent(componentName, pathData);
     expect(result).toBe(`import React from 'react';
 import { Icon, IconProps } from './index';
@@ -176,11 +185,8 @@ HomeIcon.displayName = "HomeIcon";
 
   it("generates component with multiple paths", () => {
     const componentName = "ComplexIcon";
-    const pathData = [
-      "M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z",
-      "M4 4h16v16H4z"
-    ];
-    
+    const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z", "M4 4h16v16H4z"];
+
     const result = generateReactComponent(componentName, pathData);
     expect(result).toBe(`import React from 'react';
 import { Icon, IconProps } from './index';
@@ -205,7 +211,7 @@ describe("generateReactNativeComponent(): ", () => {
   it("generates component with single path", () => {
     const componentName = "HomeIcon";
     const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"];
-    
+
     const result = generateReactNativeComponent(componentName, pathData);
     expect(result).toBe(`import React from 'react';
 import { Path } from 'react-native-svg';
@@ -227,11 +233,8 @@ HomeIcon.displayName = "HomeIcon";
 
   it("generates component with multiple paths", () => {
     const componentName = "ComplexIcon";
-    const pathData = [
-      "M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z",
-      "M4 4h16v16H4z"
-    ];
-    
+    const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z", "M4 4h16v16H4z"];
+
     const result = generateReactNativeComponent(componentName, pathData);
     expect(result).toBe(`import React from 'react';
 import { Path } from 'react-native-svg';
@@ -255,7 +258,7 @@ ComplexIcon.displayName = "ComplexIcon";
   it("handles empty path data", () => {
     const componentName = "EmptyIcon";
     const pathData: string[] = [];
-    
+
     const result = generateReactNativeComponent(componentName, pathData);
     expect(result).toBe(`import React from 'react';
 import { Path } from 'react-native-svg';
@@ -277,7 +280,7 @@ EmptyIcon.displayName = "EmptyIcon";
 
 describe("getSvgFiles(): ", () => {
   beforeEach(() => {
-    jest.spyOn(fs, 'readdirSync').mockImplementation();
+    jest.spyOn(fs, "readdirSync").mockImplementation();
   });
 
   afterEach(() => {
@@ -289,19 +292,19 @@ describe("getSvgFiles(): ", () => {
     (fs.readdirSync as jest.Mock).mockReturnValue(mockFiles);
 
     const result = getSvgFiles();
-    
+
     // Verify it filters non-svg files and returns full paths
     expect(result).toHaveLength(3);
     expect(result).toEqual([
       path.join(__dirname, "../../pixelarticons/icon1.svg"),
       path.join(__dirname, "../../pixelarticons/icon2.svg"),
-      path.join(__dirname, "../../pixelarticons/icon3.svg")
+      path.join(__dirname, "../../pixelarticons/icon3.svg"),
     ]);
   });
 
   it("returns empty array when no SVG files exist", () => {
     (fs.readdirSync as jest.Mock).mockReturnValue(["readme.md", "package.json"]);
-    
+
     const result = getSvgFiles();
     expect(result).toHaveLength(0);
   });
@@ -309,13 +312,7 @@ describe("getSvgFiles(): ", () => {
 
 describe("searchRelatedFileNames(): ", () => {
   it("finds related file names based on similarity", () => {
-    const fileNames = [
-      "arrow-left",
-      "arrow-right",
-      "arrow-up",
-      "menu",
-      "home"
-    ];
+    const fileNames = ["arrow-left", "arrow-right", "arrow-up", "menu", "home"];
 
     const results = searchRelatedFileNames("arrow", fileNames);
     expect(results).toHaveLength(3);
@@ -325,25 +322,14 @@ describe("searchRelatedFileNames(): ", () => {
   });
 
   it("respects limit parameter", () => {
-    const fileNames = [
-      "arrow-left",
-      "arrow-right",
-      "arrow-up",
-      "arrow-down",
-      "arrow-circle"
-    ];
+    const fileNames = ["arrow-left", "arrow-right", "arrow-up", "arrow-down", "arrow-circle"];
 
     const results = searchRelatedFileNames("arrow", fileNames, 2);
     expect(results).toHaveLength(2);
   });
 
   it("filters out low similarity matches", () => {
-    const fileNames = [
-      "arrow-left",
-      "menu",
-      "home",
-      "settings"
-    ];
+    const fileNames = ["arrow-left", "menu", "home", "settings"];
 
     const results = searchRelatedFileNames("arrow", fileNames);
     expect(results).toHaveLength(1);
@@ -354,7 +340,7 @@ describe("searchRelatedFileNames(): ", () => {
 
   it("returns empty array when no matches found", () => {
     const fileNames = ["menu", "home", "settings"];
-    
+
     const results = searchRelatedFileNames("xyz", fileNames);
     expect(results).toHaveLength(0);
   });
@@ -394,8 +380,8 @@ describe("calculateSimilarity(): ", () => {
 
 describe("readConfig(): ", () => {
   beforeEach(() => {
-    jest.spyOn(fs, 'existsSync').mockImplementation();
-    jest.spyOn(fs, 'readFileSync').mockImplementation();
+    jest.spyOn(fs, "existsSync").mockImplementation();
+    jest.spyOn(fs, "readFileSync").mockImplementation();
   });
 
   afterEach(() => {
@@ -406,7 +392,7 @@ describe("readConfig(): ", () => {
     const mockConfig = {
       platform: "native",
       outputPath: "src/icons",
-      svgPath: "assets/icons"
+      svgPath: "assets/icons",
     };
 
     (fs.existsSync as jest.Mock).mockReturnValue(true);
@@ -417,7 +403,7 @@ describe("readConfig(): ", () => {
 
   it("returns null when config file doesn't exist", () => {
     (fs.existsSync as jest.Mock).mockReturnValue(false);
-    
+
     expect(readConfig()).toBeNull();
   });
 
@@ -456,9 +442,9 @@ describe("getReactExportLine(): ", () => {
 
 describe("ensureIndexFile(): ", () => {
   beforeEach(() => {
-    jest.spyOn(fs, 'existsSync').mockImplementation();
-    jest.spyOn(fs, 'mkdirSync').mockImplementation();
-    jest.spyOn(fs, 'writeFileSync').mockImplementation();
+    jest.spyOn(fs, "existsSync").mockImplementation();
+    jest.spyOn(fs, "mkdirSync").mockImplementation();
+    jest.spyOn(fs, "writeFileSync").mockImplementation();
   });
 
   afterEach(() => {
@@ -470,17 +456,14 @@ describe("ensureIndexFile(): ", () => {
       platform: "native" as Platform,
       outputPath: "src/icons",
     };
-    
-    (fs.existsSync as jest.Mock)
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(false);
+
+    (fs.existsSync as jest.Mock).mockReturnValueOnce(false).mockReturnValueOnce(false);
 
     ensureIndexFile(config);
 
-    expect(fs.mkdirSync).toHaveBeenCalledWith(
-      path.join(process.cwd(), "src/icons"),
-      { recursive: true }
-    );
+    expect(fs.mkdirSync).toHaveBeenCalledWith(path.join(process.cwd(), "src/icons"), {
+      recursive: true,
+    });
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       path.join(process.cwd(), "src/icons/index.ts"),
       expect.stringContaining("react-native-svg")
@@ -492,10 +475,8 @@ describe("ensureIndexFile(): ", () => {
       platform: "react" as Platform,
       outputPath: "src/icons",
     };
-    
-    (fs.existsSync as jest.Mock)
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(false);
+
+    (fs.existsSync as jest.Mock).mockReturnValueOnce(false).mockReturnValueOnce(false);
 
     ensureIndexFile(config);
 
@@ -510,7 +491,7 @@ describe("ensureIndexFile(): ", () => {
       platform: "react" as Platform,
       outputPath: "src/icons",
     };
-    
+
     (fs.existsSync as jest.Mock).mockReturnValue(true);
 
     ensureIndexFile(config);
@@ -531,8 +512,8 @@ describe("appendIconExport(): ", () => {
   };
 
   beforeEach(() => {
-    jest.spyOn(fs, 'readFileSync').mockImplementation();
-    jest.spyOn(fs, 'appendFileSync').mockImplementation();
+    jest.spyOn(fs, "readFileSync").mockImplementation();
+    jest.spyOn(fs, "appendFileSync").mockImplementation();
   });
 
   afterEach(() => {
@@ -577,7 +558,7 @@ describe("iconFileExists(): ", () => {
   };
 
   beforeEach(() => {
-    jest.spyOn(fs, 'existsSync').mockImplementation();
+    jest.spyOn(fs, "existsSync").mockImplementation();
   });
 
   afterEach(() => {
@@ -588,9 +569,7 @@ describe("iconFileExists(): ", () => {
     (fs.existsSync as jest.Mock).mockReturnValue(true);
 
     expect(iconFileExists(config, "home")).toBe(true);
-    expect(fs.existsSync).toHaveBeenCalledWith(
-      path.join(process.cwd(), "src/icons/home.tsx")
-    );
+    expect(fs.existsSync).toHaveBeenCalledWith(path.join(process.cwd(), "src/icons/home.tsx"));
   });
 
   it("returns false when icon file doesn't exist", () => {
@@ -602,11 +581,11 @@ describe("iconFileExists(): ", () => {
 
 describe("generateIconComponent(): ", () => {
   beforeEach(() => {
-    jest.spyOn(fs, 'existsSync').mockImplementation();
-    jest.spyOn(fs, 'readFileSync').mockImplementation();
-    jest.spyOn(fs, 'mkdirSync').mockImplementation();
-    jest.spyOn(fs, 'writeFileSync').mockImplementation();
-    jest.spyOn(console, 'log').mockImplementation();
+    jest.spyOn(fs, "existsSync").mockImplementation();
+    jest.spyOn(fs, "readFileSync").mockImplementation();
+    jest.spyOn(fs, "mkdirSync").mockImplementation();
+    jest.spyOn(fs, "writeFileSync").mockImplementation();
+    jest.spyOn(console, "log").mockImplementation();
   });
 
   afterEach(() => {
@@ -670,8 +649,8 @@ describe("generateIconComponent(): ", () => {
       </svg>
     `);
 
-    await expect(generateIconComponent(config, "home", "path/to/home.svg"))
-      .rejects
-      .toThrow("Failed to extract path data from home");
+    await expect(generateIconComponent(config, "home", "path/to/home.svg")).rejects.toThrow(
+      "Failed to extract path data from home"
+    );
   });
 });

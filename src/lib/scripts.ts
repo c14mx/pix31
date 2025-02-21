@@ -79,7 +79,7 @@ async function scrapeIcons(): Promise<ScrapingStats> {
   return stats;
 }
 
-async function main() {
+async function main(): Promise<void> {
   logger.info("Starting icon scraping...");
 
   const stats = await scrapeIcons();

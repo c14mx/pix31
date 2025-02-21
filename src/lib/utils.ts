@@ -3,6 +3,8 @@ import path from "path";
 import chalk from "chalk";
 import prompts from "prompts";
 import { parse as parseSVG } from "svgson";
+import { Command } from "commander";
+import { addCommand } from "../commands/add/command";
 
 import {
   CONFIG_FILE_NAME,
@@ -10,7 +12,7 @@ import {
   REACT_INDEX_TEMPLATE,
   REACT_NATIVE_INDEX_TEMPLATE,
 } from "@lib/constants";
-import { JsonConfig, GenerationStats } from "@lib/types";
+import { JsonConfig, GenerationStats, SVGNode } from "@lib/types";
 
 export function convertNumberToWord(name: string): string {
   if (!name) return "";
@@ -44,15 +46,17 @@ export async function extractSVGPath(svgContent: string): Promise<string[] | nul
 
     if (pathElements.length === 0) return null;
 
-    return pathElements.map((element) => element.attributes.d);
+    return pathElements
+      .map((element) => element?.attributes?.d)
+      .filter((d: string | undefined) => d !== undefined);
   } catch (error) {
     console.error("Failed to parse SVG:", error);
     return null;
   }
 }
 
-export function findAllPathElements(node: any): any[] {
-  let paths: any[] = [];
+export function findAllPathElements(node: SVGNode): SVGNode[] {
+  let paths: SVGNode[] = [];
   if (node.name === "path") paths.push(node);
 
   if (node.children) {
@@ -315,4 +319,13 @@ export async function generateIndexFile(): Promise<void> {
 
   fs.writeFileSync(indexPath, indexContent);
   console.log(`Generated index file with ${tsxFiles.length} icon exports`);
+}
+
+export function configureAddCommand(program: Command): void {
+  program
+    .command("add [icons...]")
+    .description("Add icons to your project")
+    .action((icons: string[]) => {
+      addCommand(icons, {});
+    });
 }

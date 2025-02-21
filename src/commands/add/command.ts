@@ -13,10 +13,10 @@ import {
   generateIconComponent,
   appendIconExport,
   searchRelatedFileNames,
-  iconFileExists
+  iconFileExists,
 } from "@lib/utils";
 
-export async function addCommand(icons: string[], options: AddCLIOptions) {
+export async function addCommand(icons: string[], options: AddCLIOptions): Promise<void> {
   if (!icons.length) {
     console.log(chalk.yellow("What would you like to add?"));
     return;

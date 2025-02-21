@@ -21,6 +21,6 @@ program.addCommand(init);
 
 program.parse();
 
-export function cli() {
+export function cli(): void {
   const program = new Command().addCommand(init);
 }

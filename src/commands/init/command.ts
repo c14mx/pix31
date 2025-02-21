@@ -8,7 +8,7 @@ import ora from "ora";
 import prompts from "prompts";
 import { execSync } from "child_process";
 
-export const getConfigPath = () => path.join(process.cwd(), CONFIG_FILE_NAME);
+export const getConfigPath = (): string => path.join(process.cwd(), CONFIG_FILE_NAME);
 
 export const init = new Command()
   .name("init")
@@ -45,7 +45,9 @@ async function detectFramework(): Promise<Platform | null> {
 
 function checkPackageExists(packageName: string): boolean {
   try {
-    const packageJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), "package.json"), "utf-8"));
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), "package.json"), "utf-8")
+    );
     return !!(
       (packageJson.dependencies && packageJson.dependencies[packageName]) ||
       (packageJson.devDependencies && packageJson.devDependencies[packageName])
