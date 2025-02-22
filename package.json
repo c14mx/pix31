@@ -60,7 +60,7 @@
     "typescript": "^5.7.3"
   },
   "bin": {
-    "pix31": "./dist/cli.js"
+    "@c14mx/pix31": "./dist/cli.js"
   },
   "files": [
     "dist",
