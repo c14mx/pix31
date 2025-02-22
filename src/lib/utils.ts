@@ -115,7 +115,7 @@ ${componentName}.displayName = "${componentName}";
 }
 
 export function getSvgFiles(): string[] {
-  const packageRoot = path.join(__dirname, "..", "..");
+  const packageRoot = path.join(__dirname, "..");
   const svgDir = path.join(packageRoot, "pixelarticons");
 
   try {
