@@ -11,13 +11,13 @@ module.exports = {
   ],
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: 'tsconfig.test.json'
+      tsconfig: 'tsconfig.json'
     }]
   },
   moduleNameMapper: {
     '^@lib/(.*)$': '<rootDir>/src/lib/$1',
     '@commands/(.*)': '<rootDir>/src/commands/$1',
-    '^ora$': '<rootDir>/__mocks__/ora.js'
+    '^ora$': '<rootDir>/src/lib/mocks/ora.js'
   },
   roots: ['<rootDir>/src'],
   modulePathIgnorePatterns: ['<rootDir>/dist/'],
