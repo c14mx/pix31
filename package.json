@@ -21,7 +21,7 @@
     "release": "npm run build && changeset publish"
   },
   "name": "@c14mx/pix31",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": false,
   "publishConfig": {
     "access": "public"
