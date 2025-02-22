@@ -115,13 +115,17 @@ ${componentName}.displayName = "${componentName}";
 }
 
 export function getSvgFiles(): string[] {
-  const cliDir = path.join(__dirname, "../..");
-  const svgDir = path.join(cliDir, "pixelarticons");
+  const packageRoot = path.join(__dirname, "..", "..");
+  const svgDir = path.join(packageRoot, "pixelarticons");
 
-  return fs
-    .readdirSync(svgDir)
-    .filter((file) => file.endsWith(".svg"))
-    .map((file) => path.join(svgDir, file));
+  try {
+    return fs
+      .readdirSync(svgDir)
+      .filter((file) => file.endsWith(".svg"))
+      .map((file) => path.join(svgDir, file));
+  } catch (error) {
+    throw new Error(`Failed to find SVG files in ${svgDir}. Please ensure the package is installed correctly.`);
+  }
 }
 
 export function searchRelatedFileNames(query: string, fileNames: string[], limit = 3): string[] {
