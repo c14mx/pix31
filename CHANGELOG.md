@@ -1,5 +1,11 @@
 # @c14mx/pix31
 
+## 1.0.9
+
+### Patch Changes
+
+- Fixing `pixelarticons` svg path: `node_modules/pixelarticons/svg`
+
 ## 1.0.8
 
 ### Patch Changes
