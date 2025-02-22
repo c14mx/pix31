@@ -124,7 +124,9 @@ export function getSvgFiles(): string[] {
       .filter((file) => file.endsWith(".svg"))
       .map((file) => path.join(svgDir, file));
   } catch (error) {
-    throw new Error(`Failed to find SVG files in ${svgDir}. Please ensure the package is installed correctly.`);
+    throw new Error(
+      `Failed to find SVG files in ${svgDir}. Please ensure the package is installed correctly.`
+    );
   }
 }
 

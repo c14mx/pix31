@@ -12,13 +12,10 @@
     "dev": "tsc -w",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
-    "prepublishOnly": "npm run build",
-    "changeset": "changeset",
-    "version": "changeset version",
-    "release": "npm run build && changeset publish --access public"
+    "prepublishOnly": "npm run build"
   },
   "name": "pix31",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "private": false,
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -42,7 +39,6 @@
     "terminal-link": "^3.0.0"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.28.1",
     "@types/commander": "^2.12.2",
     "@types/fs-extra": "^11.0.4",
     "@types/jest": "^29.0.0",
