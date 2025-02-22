@@ -82,7 +82,7 @@ describe(`npx ${LIB_NAME} init`, () => {
   it("Prompts for output directory with default value", async () => {
     (fs.existsSync as jest.Mock).mockReturnValue(false);
     const mockPrompts = prompts as unknown as jest.Mock;
-    
+
     mockPrompts
       .mockResolvedValueOnce({ platform: "web" })
       .mockResolvedValueOnce({ outputPath: "app/components/icons" });
@@ -95,7 +95,7 @@ describe(`npx ${LIB_NAME} init`, () => {
         name: "outputPath",
         message: "What directory should the icons be added to?",
         initial: "app/components/icons",
-        validate: expect.any(Function)
+        validate: expect.any(Function),
       })
     );
   });
@@ -103,7 +103,7 @@ describe(`npx ${LIB_NAME} init`, () => {
   it("Returns null if outputPath is not provided", async () => {
     (fs.existsSync as jest.Mock).mockReturnValue(false);
     const mockPrompts = prompts as unknown as jest.Mock;
-    
+
     mockPrompts
       .mockResolvedValueOnce({ platform: "web" })
       .mockResolvedValueOnce({ outputPath: null });

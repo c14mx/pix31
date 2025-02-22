@@ -146,7 +146,7 @@ export async function initializeConfig(): Promise<JsonConfig | null> {
     name: "outputPath",
     message: "What directory should the icons be added to?",
     initial: "app/components/icons",
-    validate: (value) => value.length > 0 || "Please enter a valid path"
+    validate: (value) => value.length > 0 || "Please enter a valid path",
   });
 
   if (!outputPath) return null;
