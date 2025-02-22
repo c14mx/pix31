@@ -26,9 +26,6 @@
   "author": "c14mx",
   "license": "MIT",
   "description": "A CLI to add pixelarticons to your React and React Native project.",
-  "publishConfig": {
-    "access": "public"
-  },
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
