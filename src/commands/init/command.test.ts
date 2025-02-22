@@ -83,14 +83,12 @@ describe(`npx ${LIB_NAME} init`, () => {
     (fs.existsSync as jest.Mock).mockReturnValue(false);
     const mockPrompts = prompts as unknown as jest.Mock;
     
-    // Mock both platform and outputPath prompts
     mockPrompts
       .mockResolvedValueOnce({ platform: "web" })
       .mockResolvedValueOnce({ outputPath: "app/components/icons" });
 
     await initializeConfig();
 
-    // Verify the outputPath prompt was called with correct options
     expect(mockPrompts).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "text",
@@ -125,7 +123,6 @@ describe(`npx ${LIB_NAME} init`, () => {
     );
 
     const mockPrompts = prompts as unknown as jest.Mock;
-    // Even with auto-detected platform, we still need to mock the outputPath prompt
     mockPrompts.mockResolvedValueOnce({ outputPath: "app/components/icons" });
 
     await initializeConfig();

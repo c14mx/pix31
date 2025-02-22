@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Update `cli.yml` workflow step names
+- Updates `init` command to prompt for output path
 - Cleanup init command
 
 ## 1.0.9
