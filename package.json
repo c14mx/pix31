@@ -17,7 +17,7 @@
     "release": "npm run build && changeset publish"
   },
   "name": "@c14mx/pix31",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": false,
   "publishConfig": {
     "access": "public"
@@ -87,9 +87,9 @@
   },
   "exports": {
     ".": {
-      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     }
   },
   "repository": {
