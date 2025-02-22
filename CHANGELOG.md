@@ -5,7 +5,6 @@
 ### Patch Changes
 
 - 62e3a75: Changed package name from @c14mx/pix31 to pix31 to publish as an unscoped package.
-- df2d43f: Changed package name from @c14mx/pix31 to pix31 to publish as an unscoped package.
 
 ## 1.0.2
 
