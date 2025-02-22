@@ -22,6 +22,10 @@
   },
   "name": "@c14mx/pix31",
   "version": "1.0.0",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "dist/cli.js",
   "module": "dist/cli.mjs",
   "types": "dist/cli.d.ts",
