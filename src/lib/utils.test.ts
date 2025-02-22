@@ -20,8 +20,7 @@ import {
 import fs from "fs";
 import path from "path";
 import { JsonConfig, Platform } from "./types";
-import chalk from "chalk";
-import { CONFIG_FILE_NAME, LIB_NAME } from "./constants";
+import { LIB_NAME } from "./constants";
 
 describe("convertNumberToWord()", () => {
   it("Replaces number prefix with word", () => {
@@ -57,12 +56,10 @@ describe("toPascalCase()", () => {
 });
 
 describe("extractSVGPath()", () => {
-  // Mock console.error before tests
   beforeEach(() => {
     jest.spyOn(console, "error").mockImplementation(() => {});
   });
 
-  // Restore console.error after tests
   afterEach(() => {
     jest.restoreAllMocks();
   });
@@ -102,7 +99,7 @@ describe("extractSVGPath()", () => {
     const svgContent = `not valid svg`;
     const paths = await extractSVGPath(svgContent);
     expect(paths).toBeNull();
-    // Verify error was logged
+
     expect(console.error).toHaveBeenCalledWith("Failed to parse SVG:", expect.any(Error));
   });
 });
@@ -671,40 +668,11 @@ describe("printInitSuccess()", () => {
   });
 
   it("Prints formatted success message", () => {
-    const config: JsonConfig = {
-      platform: "web",
-      outputPath: "src/components/icons",
-    };
+    printInitSuccess();
 
-    printInitSuccess(config);
-
-    expect(consoleLogSpy).toHaveBeenCalledWith("");
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      chalk.cyan("info"),
-      "Thanks for choosing pix31 to manage your pixelarticons"
-    );
-    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"));
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      chalk.cyan("info"),
-      "You should be set up to start using pix31 now!"
-    );
-    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"));
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      chalk.cyan("info"),
-      "We have added a couple of things to help you out:"
-    );
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      chalk.cyan("info"),
-      `- ${CONFIG_FILE_NAME} contains your icon configuration`
-    );
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      chalk.cyan("info"),
-      `- ${config.outputPath} will contain your icon components`
-    );
-    expect(consoleLogSpy).toHaveBeenCalledWith("");
     expect(consoleLogSpy).toHaveBeenCalledWith("Commands you can run:");
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      `  npx ${LIB_NAME} browse                     Open pixelarticons website in browser`
+      `  npx ${LIB_NAME} browse                     Search pixelarticons website`
     );
     expect(consoleLogSpy).toHaveBeenCalledWith(
       `  npx ${LIB_NAME} add [icon-1] [icon-2] ...  Add icons to your project`

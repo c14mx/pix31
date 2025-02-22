@@ -1,4 +1,10 @@
-# @c14mx/pix31
+# pix31
+
+## 1.0.10
+
+### Patch Changes
+
+- Cleanup init command
 
 ## 1.0.9
 

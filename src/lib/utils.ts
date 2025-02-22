@@ -339,17 +339,8 @@ export function configureAddCommand(program: Command): void {
     });
 }
 
-export function printInitSuccess(config: JsonConfig): void {
-  console.log("");
-  console.log(chalk.cyan("info"), "Thanks for choosing pix31 to manage your pixelarticons");
-  console.log(chalk.cyan("info"));
-  console.log(chalk.cyan("info"), "You should be set up to start using pix31 now!");
-  console.log(chalk.cyan("info"));
-  console.log(chalk.cyan("info"), "We have added a couple of things to help you out:");
-  console.log(chalk.cyan("info"), `- ${CONFIG_FILE_NAME} contains your icon configuration`);
-  console.log(chalk.cyan("info"), `- ${config.outputPath} will contain your icon components`);
-  console.log("");
+export function printInitSuccess(): void {
   console.log("Commands you can run:");
-  console.log(`  npx ${LIB_NAME} browse                     Open pixelarticons website in browser`);
+  console.log(`  npx ${LIB_NAME} browse                     Search pixelarticons website`);
   console.log(`  npx ${LIB_NAME} add [icon-1] [icon-2] ...  Add icons to your project`);
 }
