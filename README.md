@@ -1,8 +1,5 @@
 # pix31
 
-[![npm version](https://badge.fury.io/js/%40c14mx%2Fpix31.svg)](https://www.npmjs.com/package/@c14mx/pix31)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 A CLI to add [pixelarticons](https://pixelarticons.com/) to your React and React Native projects.
 
 **Dependencies**
