@@ -16,15 +16,12 @@
     "version": "changeset version",
     "release": "npm run build && changeset publish"
   },
-  "name": "@c14mx/pix31",
-  "version": "1.0.4",
+  "name": "pix31",
+  "version": "1.0.1",
   "private": false,
-  "publishConfig": {
-    "access": "public"
-  },
-  "main": "dist/cli.js",
-  "module": "dist/cli.mjs",
-  "types": "dist/cli.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
   "author": "c14mx",
   "license": "MIT",
   "description": "A CLI to add pixelarticons to your React and React Native project.",
