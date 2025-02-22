@@ -6,7 +6,7 @@
 
 - Update `cli.yml` workflow step names
 - Updates `init` command to prompt for output path
-- Cleanup init command
+- Updates `init` success logs
 
 ## 1.0.9
 
