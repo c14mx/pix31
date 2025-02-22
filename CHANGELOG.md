@@ -1,5 +1,11 @@
 # @c14mx/pix31
 
+## 1.0.4
+
+### Patch Changes
+
+- Update release script with public access
+
 ## 1.0.3
 
 ### Patch Changes

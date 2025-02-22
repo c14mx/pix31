@@ -14,10 +14,10 @@
     "lint": "tsc --noEmit",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "npm run build && changeset publish"
+    "release": "npm run build && changeset publish --access public"
   },
   "name": "pix31",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": false,
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -25,6 +25,9 @@
   "author": "c14mx",
   "license": "MIT",
   "description": "A CLI to add pixelarticons to your React and React Native project.",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
