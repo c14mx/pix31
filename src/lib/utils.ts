@@ -174,7 +174,7 @@ export function readConfig(): JsonConfig | null {
 }
 
 export function ensureIndexFile(config: JsonConfig): void {
-  const indexPath = path.join(process.cwd(), config.outputPath, "index.ts");
+  const indexPath = path.join(process.cwd(), config.outputPath, "index.tsx");
 
   if (!fs.existsSync(path.dirname(indexPath))) {
     fs.mkdirSync(path.dirname(indexPath), { recursive: true });
@@ -189,7 +189,7 @@ export function ensureIndexFile(config: JsonConfig): void {
 }
 
 export function appendIconExport(config: JsonConfig, iconName: string): void {
-  const indexPath = path.join(process.cwd(), config.outputPath, "index.ts");
+  const indexPath = path.join(process.cwd(), config.outputPath, "index.tsx");
   const existingContent = fs.readFileSync(indexPath, "utf-8");
   const exportLine =
     config.platform === "native"
@@ -311,7 +311,7 @@ export async function generateReactIcons(): Promise<GenerationStats> {
 
 export async function generateIndexFile(): Promise<void> {
   const reactIconsDir = path.resolve("react-icons");
-  const indexPath = path.join(reactIconsDir, "index.ts");
+  const indexPath = path.join(reactIconsDir, "index.tsx");
 
   let indexContent = `export { Pix31Icon, Pix31IconProps } from "../lib/pix31-icon";\n\n`;
 
@@ -340,7 +340,15 @@ export function configureAddCommand(program: Command): void {
 }
 
 export function printInitSuccess(): void {
-  console.log("Commands you can run:");
-  console.log(`  npx ${LIB_NAME} browse                     Search pixelarticons website`);
-  console.log(`  npx ${LIB_NAME} add [icon-1] [icon-2] ...  Add icons to your project`);
+  console.log(chalk.gray("--------------------------------"));
+  console.log(chalk.white("ℹ"), "Commands you can run:");
+  console.log(
+    chalk.blue("+"),
+    `npx ${LIB_NAME} browse                     Search pixelarticons website`
+  );
+  console.log(
+    chalk.green("+"),
+    `npx ${LIB_NAME} add [icon-1] [icon-2] ...  Add icons to your project`
+  );
+  console.log(chalk.gray("--------------------------------"));
 }
