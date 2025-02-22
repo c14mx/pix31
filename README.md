@@ -1,6 +1,6 @@
 # pix31
 
-[![npm version](https://badge.fury.io/js/pix31.svg)](https://badge.fury.io/js/pix31)
+[![npm version](https://badge.fury.io/js/%40c14mx%2Fpix31.svg)](https://www.npmjs.com/package/@c14mx/pix31)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A CLI to add [pixelarticons](https://pixelarticons.com/) to your React and React Native projects.
@@ -11,7 +11,7 @@ A CLI to add [pixelarticons](https://pixelarticons.com/) to your React and React
 
 ## Getting started
 
-Run the `init` command to select web or native and set a path to the new icons directory.
+Run the `init` to add an `pix31.json` config file and install dependencies.
 
 ```bash
 npx pix31 init
@@ -19,7 +19,13 @@ npx pix31 init
 
 ## Commands
 
-Use the `add` command to add icons to your project. pix31 uses the same lower-case naming-convention as [pixelarticons](https://pixelarticons.com/):
+Use the `browse` command to open the [pixelarticons](https://pixelarticons.com/) website on your browser and browse the available icons. **Note:** Only the free icons are available to install using `pix31`!
+
+```bash
+npx pix31 browse
+```
+
+Use the `add` command to add icons to your project. Icon names use the same lowercase naming-convention as [pixelarticons](https://pixelarticons.com/):
 
 ```bash
 npx pix31 add [pixelarticon-name]
@@ -27,20 +33,15 @@ npx pix31 add [pixelarticon-name]
 
 If you type an icon name that doesn't exist, you'll see a suggested list of icons that most closely match your input.
 
-Use the `browse` command to open the [pixelarticons](https://pixelarticons.com/) website on your browser.
-
-```bash
-npx pix31 browse
-```
 
 ## Feedback
 
 If you have feedback or catch a bug open an issue!
 
-## Development
+## License
 
-This project uses:
-- TypeScript for type checking and linting
-- Prettier for code formatting
-- Jest for testing
+This project is licensed under the [MIT License](LICENSE).
 
+## Acknowledgments
+
+This project uses SVG icons from [pixelarticons](https://pixelarticons.com/).

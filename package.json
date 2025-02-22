@@ -1,10 +1,6 @@
 {
   "scripts": {
     "scrape-icons": "ts-node src/scrape-pixelarticons.ts",
-    "generate-react-icons": "ts-node src/generate-react-icons.ts",
-    "generate-react-index": "ts-node src/generate-react-index-file.ts",
-    "clean": "rm -rf react-icons/*",
-    "generate-all": "npm run clean && npm run generate-react-icons && npm run generate-react-index",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
@@ -21,7 +17,7 @@
     "release": "npm run build && changeset publish"
   },
   "name": "@c14mx/pix31",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "private": false,
   "publishConfig": {
     "access": "public"
@@ -31,7 +27,7 @@
   "types": "dist/cli.d.ts",
   "author": "c14mx",
   "license": "MIT",
-  "description": "A CLI to add pixelarticons to your React and React Native projects.",
+  "description": "A CLI to add pixelarticons to your React and React Native project.",
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
@@ -55,12 +51,13 @@
     "@types/node": "^22.13.4",
     "@types/open": "^6.1.0",
     "@types/prompts": "^2.4.9",
-    "tsup": "^8.0.2",
+    "changelog": "^1.4.2",
     "jest": "^29.0.0",
     "prettier": "^3.5.1",
     "ts-jest": "^29.0.0",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "tsup": "^8.0.2",
     "typescript": "^5.7.3"
   },
   "bin": {
@@ -94,5 +91,13 @@
       "import": "./dist/index.mjs",
       "types": "./dist/index.d.ts"
     }
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/c14mx/pix31"
+  },
+  "bugs": {
+    "url": "https://github.com/c14mx/pix31/issues"
+  },
+  "homepage": "https://github.com/c14mx/pix31#readme"
 }
