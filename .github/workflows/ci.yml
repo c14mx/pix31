@@ -24,14 +24,14 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
-      - name: Type check
+      - name: Run typecheck
         run: npm run typecheck
 
-      - name: Lint
+      - name: Run lin
         run: npm run lint
 
-      - name: Build
+      - name: Run build
         run: npm run build
 
-      - name: Test
+      - name: Run tests
         run: npm test 

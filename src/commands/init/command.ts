@@ -113,7 +113,6 @@ async function installDependencies(platform: "web" | "native"): Promise<void> {
 export async function initializeConfig(): Promise<JsonConfig | null> {
   const configPath = getConfigPath();
 
-  // Check if config exists
   if (fs.existsSync(configPath)) {
     const { overwrite } = await prompts({
       type: "confirm",
@@ -122,15 +121,11 @@ export async function initializeConfig(): Promise<JsonConfig | null> {
       initial: false,
     });
 
-    if (!overwrite) {
-      return null;
-    }
+    if (!overwrite) return null;
   }
 
-  // Try to detect framework first
   let platform = await detectFramework();
 
-  // If framework couldn't be detected, ask user
   if (!platform) {
     const response = await prompts({
       type: "select",
@@ -144,20 +139,28 @@ export async function initializeConfig(): Promise<JsonConfig | null> {
 
     if (!response.platform) return null;
     platform = response.platform;
-  } else {
-    console.log(chalk.green(`✓ Detected ${PLATFORMS[platform]} project`));
   }
+
+  const { outputPath } = await prompts({
+    type: "text",
+    name: "outputPath",
+    message: "What directory should the icons be added to?",
+    initial: "app/components/icons",
+    validate: (value) => value.length > 0 || "Please enter a valid path",
+  });
+
+  if (!outputPath) return null;
 
   try {
     await installDependencies(platform as "web" | "native");
 
     const config: JsonConfig = {
       platform: platform as Platform,
-      outputPath: "src/components/icons",
+      outputPath,
     };
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-    printInitSuccess(config);
+    printInitSuccess();
     return config;
   } catch (error) {
     console.error(chalk.red("Failed to initialize config:"), error);

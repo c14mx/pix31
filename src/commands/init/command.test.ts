@@ -29,14 +29,14 @@ describe(`npx ${LIB_NAME} init`, () => {
     jest.clearAllMocks();
   });
 
-  it("Creates pix31.json config", async () => {
+  it("Creates pix31.json config with custom output path", async () => {
     (fs.existsSync as jest.Mock).mockReturnValue(false);
     (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
 
     const mockPrompts = prompts as unknown as jest.Mock;
     mockPrompts
       .mockResolvedValueOnce({ platform: "web" })
-      .mockResolvedValueOnce({ outputPath: "src/components/icons" });
+      .mockResolvedValueOnce({ outputPath: "custom/icons/path" });
 
     await initializeConfig();
 
@@ -45,7 +45,7 @@ describe(`npx ${LIB_NAME} init`, () => {
       JSON.stringify(
         {
           platform: "web",
-          outputPath: "src/components/icons",
+          outputPath: "custom/icons/path",
         },
         null,
         2
@@ -79,9 +79,41 @@ describe(`npx ${LIB_NAME} init`, () => {
     );
   });
 
+  it("Prompts for output directory with default value", async () => {
+    (fs.existsSync as jest.Mock).mockReturnValue(false);
+    const mockPrompts = prompts as unknown as jest.Mock;
+
+    mockPrompts
+      .mockResolvedValueOnce({ platform: "web" })
+      .mockResolvedValueOnce({ outputPath: "app/components/icons" });
+
+    await initializeConfig();
+
+    expect(mockPrompts).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "text",
+        name: "outputPath",
+        message: "What directory should the icons be added to?",
+        initial: "app/components/icons",
+        validate: expect.any(Function),
+      })
+    );
+  });
+
+  it("Returns null if outputPath is not provided", async () => {
+    (fs.existsSync as jest.Mock).mockReturnValue(false);
+    const mockPrompts = prompts as unknown as jest.Mock;
+
+    mockPrompts
+      .mockResolvedValueOnce({ platform: "web" })
+      .mockResolvedValueOnce({ outputPath: null });
+
+    const result = await initializeConfig();
+    expect(result).toBeNull();
+  });
+
   it("Auto-inits React Native project", async () => {
     (fs.existsSync as jest.Mock).mockReturnValueOnce(false).mockReturnValueOnce(true);
-
     (fs.readFileSync as jest.Mock).mockReturnValueOnce(
       JSON.stringify({
         dependencies: {
@@ -91,7 +123,7 @@ describe(`npx ${LIB_NAME} init`, () => {
     );
 
     const mockPrompts = prompts as unknown as jest.Mock;
-    mockPrompts.mockResolvedValueOnce({ outputPath: "src/components/icons" });
+    mockPrompts.mockResolvedValueOnce({ outputPath: "app/components/icons" });
 
     await initializeConfig();
 
@@ -100,7 +132,7 @@ describe(`npx ${LIB_NAME} init`, () => {
       JSON.stringify(
         {
           platform: "native",
-          outputPath: "src/components/icons",
+          outputPath: "app/components/icons",
         },
         null,
         2
@@ -174,7 +206,10 @@ describe("initializeConfig()", () => {
       .mockReturnValueOnce(JSON.stringify({ dependencies: { "react-native": "0.70.0" } }))
       .mockReturnValueOnce(JSON.stringify({ dependencies: {} }));
 
-    (prompts as unknown as jest.Mock).mockResolvedValueOnce({ platform: "native" });
+    const mockPrompts = prompts as unknown as jest.Mock;
+    mockPrompts
+      .mockResolvedValueOnce({ platform: "native" })
+      .mockResolvedValueOnce({ outputPath: "app/components/icons" });
 
     await initializeConfig();
 
@@ -189,7 +224,10 @@ describe("initializeConfig()", () => {
       .mockReturnValueOnce(JSON.stringify({ dependencies: { react: "18.0.0" } }))
       .mockReturnValueOnce(JSON.stringify({ dependencies: {} }));
 
-    (prompts as unknown as jest.Mock).mockResolvedValueOnce({ platform: "web" });
+    const mockPrompts = prompts as unknown as jest.Mock;
+    mockPrompts
+      .mockResolvedValueOnce({ platform: "web" })
+      .mockResolvedValueOnce({ outputPath: "app/components/icons" });
 
     await initializeConfig();
 
@@ -215,7 +253,10 @@ describe("initializeConfig()", () => {
 
     (fs.readFileSync as jest.Mock).mockReturnValue(JSON.stringify(fullPackageJson));
 
-    (prompts as unknown as jest.Mock).mockResolvedValueOnce({ platform: "web" });
+    const mockPrompts = prompts as unknown as jest.Mock;
+    mockPrompts
+      .mockResolvedValueOnce({ platform: "web" })
+      .mockResolvedValueOnce({ outputPath: "app/components/icons" });
 
     await initializeConfig();
 

@@ -1,4 +1,12 @@
-# @c14mx/pix31
+# pix31
+
+## 1.0.10
+
+### Patch Changes
+
+- Update `cli.yml` workflow step names
+- Updates `init` command to prompt for output path
+- Updates `init` success logs
 
 ## 1.0.9
 
