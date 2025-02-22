@@ -1,5 +1,12 @@
 # pix31
 
+## 1.0.11
+
+### Patch Changes
+
+- React `index.ts` file should have `.tsx` extension
+- Polish `info` logs on successful init
+
 ## 1.0.10
 
 ### Patch Changes

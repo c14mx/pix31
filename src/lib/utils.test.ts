@@ -466,7 +466,7 @@ describe("ensureIndexFile()", () => {
       recursive: true,
     });
     expect(fs.writeFileSync).toHaveBeenCalledWith(
-      path.join(process.cwd(), "src/icons/index.ts"),
+      path.join(process.cwd(), "src/icons/index.tsx"),
       expect.stringContaining("react-native-svg")
     );
   });
@@ -482,7 +482,7 @@ describe("ensureIndexFile()", () => {
     ensureIndexFile(config);
 
     expect(fs.writeFileSync).toHaveBeenCalledWith(
-      path.join(process.cwd(), "src/icons/index.ts"),
+      path.join(process.cwd(), "src/icons/index.tsx"),
       expect.not.stringContaining("react-native-svg")
     );
   });
@@ -527,7 +527,7 @@ describe("appendIconExport()", () => {
     appendIconExport(nativeConfig, "home");
 
     expect(fs.appendFileSync).toHaveBeenCalledWith(
-      path.join(process.cwd(), "src/icons/index.ts"),
+      path.join(process.cwd(), "src/icons/index.tsx"),
       '\nexport * from "./home";\n'
     );
   });
@@ -538,7 +538,7 @@ describe("appendIconExport()", () => {
     appendIconExport(reactConfig, "home");
 
     expect(fs.appendFileSync).toHaveBeenCalledWith(
-      path.join(process.cwd(), "src/icons/index.ts"),
+      path.join(process.cwd(), "src/icons/index.tsx"),
       '\nexport { HomeIcon } from "./home";\n'
     );
   });
@@ -667,15 +667,22 @@ describe("printInitSuccess()", () => {
     consoleLogSpy.mockRestore();
   });
 
-  it("Prints formatted success message", () => {
+  it("Prints formatted success message with chalk colors", () => {
     printInitSuccess();
 
-    expect(consoleLogSpy).toHaveBeenCalledWith("Commands you can run:");
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      `  npx ${LIB_NAME} browse                     Search pixelarticons website`
+    expect(consoleLogSpy).toHaveBeenCalledTimes(5);
+    expect(consoleLogSpy).toHaveBeenNthCalledWith(1, expect.stringContaining("--------------------------------"));
+    expect(consoleLogSpy).toHaveBeenNthCalledWith(2, expect.any(String), "Commands you can run:");
+    expect(consoleLogSpy).toHaveBeenNthCalledWith(
+      3, 
+      expect.any(String),
+      `npx ${LIB_NAME} browse                     Search pixelarticons website`
     );
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      `  npx ${LIB_NAME} add [icon-1] [icon-2] ...  Add icons to your project`
+    expect(consoleLogSpy).toHaveBeenNthCalledWith(
+      4,
+      expect.any(String),
+      `npx ${LIB_NAME} add [icon-1] [icon-2] ...  Add icons to your project`
     );
+    expect(consoleLogSpy).toHaveBeenNthCalledWith(5, expect.stringContaining("--------------------------------"));
   });
 });
