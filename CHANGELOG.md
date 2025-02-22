@@ -1,5 +1,11 @@
 # @c14mx/pix31
 
+## 1.0.5
+
+### Patch Changes
+
+- 5ba1dac: Fix package publishing configuration and setup
+
 ## 1.0.4
 
 ### Patch Changes
