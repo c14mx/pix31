@@ -34,3 +34,10 @@ npx pix31 browse
 
 If you have feedback or catch a bug open an issue!
 
+## Development
+
+This project uses:
+- TypeScript for type checking and linting
+- Prettier for code formatting
+- Jest for testing
+

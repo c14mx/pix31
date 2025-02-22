@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-
 import { configureAddCommand } from "./lib/utils";
 import { init } from "./commands/init/command";
 import { browse } from "./commands/browse/command";
@@ -20,7 +19,3 @@ configureAddCommand(program);
 program.addCommand(init);
 
 program.parse();
-
-export function cli(): void {
-  const program = new Command().addCommand(init);
-}

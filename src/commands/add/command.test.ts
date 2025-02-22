@@ -75,7 +75,7 @@ describe(`npx ${LIB_NAME} add`, () => {
   });
 
   it("Shows help message when no icons specified", async () => {
-    await addCommand([], {});
+    await addCommand([]);
 
     expect(console.log).toHaveBeenCalledWith(chalk.yellow("What would you like to add?"));
   });
@@ -83,7 +83,7 @@ describe(`npx ${LIB_NAME} add`, () => {
   it("Initializes config when not found", async () => {
     mockUtils.readConfig.mockReturnValueOnce(null);
 
-    await addCommand(["some-icon"], {});
+    await addCommand(["some-icon"]);
 
     expect(console.error).toHaveBeenCalledWith(
       chalk.yellow("!"),
@@ -103,7 +103,7 @@ describe(`npx ${LIB_NAME} add`, () => {
 
     mockUtils.searchRelatedFileNames.mockReturnValue([]);
 
-    await addCommand(["chevron-down"], {});
+    await addCommand(["chevron-down"]);
 
     expect(mockUtils.generateIconComponent).toHaveBeenCalledWith(
       { platform: "web", outputPath: "src/components/icons" },
@@ -126,7 +126,7 @@ describe(`npx ${LIB_NAME} add`, () => {
 
     mockUtils.formatSvgFileNameToPascalCase.mockReturnValue("ChevronDown");
 
-    await addCommand(["non-existent-icon"], {});
+    await addCommand(["non-existent-icon"]);
 
     expect(console.error).toHaveBeenCalledWith("✖ Failed to generate ChevronDownIcon");
   });

@@ -2,8 +2,7 @@ import chalk from "chalk";
 import * as path from "path";
 import prompts from "prompts";
 
-import { AddCLIOptions } from "../../lib/types";
-import { CONFIG_FILE_NAME, LIB_NAME, PLATFORMS } from "../../lib/constants";
+import { CONFIG_FILE_NAME, LIB_NAME } from "../../lib/constants";
 import { initializeConfig } from "../init/command";
 import {
   readConfig,
@@ -16,7 +15,7 @@ import {
   iconFileExists,
 } from "@lib/utils";
 
-export async function addCommand(icons: string[], options: AddCLIOptions): Promise<void> {
+export async function addCommand(icons: string[]): Promise<void> {
   if (!icons.length) {
     console.log(chalk.yellow("What would you like to add?"));
     return;

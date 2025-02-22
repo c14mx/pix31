@@ -15,19 +15,22 @@ import {
   appendIconExport,
   iconFileExists,
   generateIconComponent,
+  printInitSuccess,
 } from "./utils";
 import fs from "fs";
 import path from "path";
 import { JsonConfig, Platform } from "./types";
+import chalk from "chalk";
+import { CONFIG_FILE_NAME, LIB_NAME } from "./constants";
 
-describe("convertNumberToWord(): ", () => {
-  it("Replaces number prefix with NUMBER_WORDS", () => {
+describe("convertNumberToWord()", () => {
+  it("Replaces number prefix with word", () => {
     expect(convertNumberToWord("4g")).toBe("Four-g");
     expect(convertNumberToWord("4k-box")).toBe("Four-k-box");
     expect(convertNumberToWord("5g")).toBe("Five-g");
   });
 
-  it("Keeps original string if there is no number prefix", () => {
+  it("Preserves strings without number prefix", () => {
     expect(convertNumberToWord("android")).toBe("android");
     expect(convertNumberToWord("align-left")).toBe("align-left");
     expect(convertNumberToWord("battery-1")).toBe("battery-1");
@@ -36,24 +39,24 @@ describe("convertNumberToWord(): ", () => {
   });
 });
 
-describe("toPascalCase(): ", () => {
-  it("converts hyphenated strings to PascalCase", () => {
+describe("toPascalCase()", () => {
+  it("Converts hyphenated strings", () => {
     expect(toPascalCase("hello-world")).toBe("HelloWorld");
     expect(toPascalCase("foo-bar-baz")).toBe("FooBarBaz");
     expect(toPascalCase("some-component")).toBe("SomeComponent");
   });
 
-  it("handles single word strings", () => {
+  it("Handles single words", () => {
     expect(toPascalCase("hello")).toBe("Hello");
     expect(toPascalCase("world")).toBe("World");
   });
 
-  it("handles empty strings", () => {
+  it("Handles empty strings", () => {
     expect(toPascalCase("")).toBe("");
   });
 });
 
-describe("extractSVGPath(): ", () => {
+describe("extractSVGPath()", () => {
   // Mock console.error before tests
   beforeEach(() => {
     jest.spyOn(console, "error").mockImplementation(() => {});
@@ -64,7 +67,7 @@ describe("extractSVGPath(): ", () => {
     jest.restoreAllMocks();
   });
 
-  it("extracts single path from SVG", async () => {
+  it("Extracts single path", async () => {
     const svgContent = `
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
         <path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"/>
@@ -74,7 +77,7 @@ describe("extractSVGPath(): ", () => {
     expect(paths).toEqual(["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"]);
   });
 
-  it("extracts multiple paths from SVG", async () => {
+  it("Extracts multiple paths", async () => {
     const svgContent = `
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
         <path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"/>
@@ -85,7 +88,7 @@ describe("extractSVGPath(): ", () => {
     expect(paths).toEqual(["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z", "M4 4h16v16H4z"]);
   });
 
-  it("returns null for SVG without paths", async () => {
+  it("Returns null for SVG without paths", async () => {
     const svgContent = `
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
         <rect width="24" height="24"/>
@@ -95,7 +98,7 @@ describe("extractSVGPath(): ", () => {
     expect(paths).toBeNull();
   });
 
-  it("returns null for invalid SVG", async () => {
+  it("Returns null for invalid SVG", async () => {
     const svgContent = `not valid svg`;
     const paths = await extractSVGPath(svgContent);
     expect(paths).toBeNull();
@@ -104,8 +107,8 @@ describe("extractSVGPath(): ", () => {
   });
 });
 
-describe("findAllPathElements(): ", () => {
-  it("finds path elements at root level", () => {
+describe("findAllPathElements()", () => {
+  it("Finds root level paths", () => {
     const node = {
       name: "svg",
       children: [
@@ -120,7 +123,7 @@ describe("findAllPathElements(): ", () => {
     expect(paths[1]?.attributes?.d).toBe("M2 2h2");
   });
 
-  it("finds nested path elements", () => {
+  it("Finds nested paths", () => {
     const node = {
       name: "svg",
       children: [
@@ -138,7 +141,7 @@ describe("findAllPathElements(): ", () => {
     expect(paths[1]?.attributes?.d).toBe("M2 2h2");
   });
 
-  it("returns empty array when no paths found", () => {
+  it("Returns empty array when no paths", () => {
     const node = {
       name: "svg",
       children: [{ name: "rect", attributes: { width: "10", height: "10" } }],
@@ -148,7 +151,7 @@ describe("findAllPathElements(): ", () => {
     expect(paths).toHaveLength(0);
   });
 
-  it("handles nodes without children", () => {
+  it("Handles nodes without children", () => {
     const node = {
       name: "path",
       attributes: { d: "M1 1h1" },
@@ -160,8 +163,8 @@ describe("findAllPathElements(): ", () => {
   });
 });
 
-describe("generateReactComponent(): ", () => {
-  it("generates component with single path", () => {
+describe("generateReactComponent()", () => {
+  it("Generates single path component", () => {
     const componentName = "HomeIcon";
     const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"];
 
@@ -183,7 +186,7 @@ HomeIcon.displayName = "HomeIcon";
 `);
   });
 
-  it("generates component with multiple paths", () => {
+  it("Generates multi-path component", () => {
     const componentName = "ComplexIcon";
     const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z", "M4 4h16v16H4z"];
 
@@ -207,8 +210,8 @@ ComplexIcon.displayName = "ComplexIcon";
   });
 });
 
-describe("generateReactNativeComponent(): ", () => {
-  it("generates component with single path", () => {
+describe("generateReactNativeComponent()", () => {
+  it("Generates single path component", () => {
     const componentName = "HomeIcon";
     const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"];
 
@@ -231,7 +234,7 @@ HomeIcon.displayName = "HomeIcon";
 `);
   });
 
-  it("generates component with multiple paths", () => {
+  it("Generates multi-path component", () => {
     const componentName = "ComplexIcon";
     const pathData = ["M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z", "M4 4h16v16H4z"];
 
@@ -255,7 +258,7 @@ ComplexIcon.displayName = "ComplexIcon";
 `);
   });
 
-  it("handles empty path data", () => {
+  it("Handles empty paths", () => {
     const componentName = "EmptyIcon";
     const pathData: string[] = [];
 
@@ -278,7 +281,7 @@ EmptyIcon.displayName = "EmptyIcon";
   });
 });
 
-describe("getSvgFiles(): ", () => {
+describe("getSvgFiles()", () => {
   beforeEach(() => {
     jest.spyOn(fs, "readdirSync").mockImplementation();
   });
@@ -287,7 +290,7 @@ describe("getSvgFiles(): ", () => {
     jest.restoreAllMocks();
   });
 
-  it("returns list of SVG files from pixelarticons directory", () => {
+  it("Lists SVG files from directory", () => {
     const mockFiles = ["icon1.svg", "icon2.svg", "readme.md", "icon3.svg"];
     (fs.readdirSync as jest.Mock).mockReturnValue(mockFiles);
 
@@ -302,7 +305,7 @@ describe("getSvgFiles(): ", () => {
     ]);
   });
 
-  it("returns empty array when no SVG files exist", () => {
+  it("Returns empty array when no SVGs", () => {
     (fs.readdirSync as jest.Mock).mockReturnValue(["readme.md", "package.json"]);
 
     const result = getSvgFiles();
@@ -310,8 +313,8 @@ describe("getSvgFiles(): ", () => {
   });
 });
 
-describe("searchRelatedFileNames(): ", () => {
-  it("finds related file names based on similarity", () => {
+describe("searchRelatedFileNames()", () => {
+  it("Finds similar names", () => {
     const fileNames = ["arrow-left", "arrow-right", "arrow-up", "menu", "home"];
 
     const results = searchRelatedFileNames("arrow", fileNames);
@@ -321,14 +324,14 @@ describe("searchRelatedFileNames(): ", () => {
     expect(results).toContain("arrow-up");
   });
 
-  it("respects limit parameter", () => {
+  it("Respects limit parameter", () => {
     const fileNames = ["arrow-left", "arrow-right", "arrow-up", "arrow-down", "arrow-circle"];
 
     const results = searchRelatedFileNames("arrow", fileNames, 2);
     expect(results).toHaveLength(2);
   });
 
-  it("filters out low similarity matches", () => {
+  it("Filters low similarity matches", () => {
     const fileNames = ["arrow-left", "menu", "home", "settings"];
 
     const results = searchRelatedFileNames("arrow", fileNames);
@@ -338,7 +341,7 @@ describe("searchRelatedFileNames(): ", () => {
     expect(results).not.toContain("home");
   });
 
-  it("returns empty array when no matches found", () => {
+  it("Returns empty for no matches", () => {
     const fileNames = ["menu", "home", "settings"];
 
     const results = searchRelatedFileNames("xyz", fileNames);
@@ -346,39 +349,39 @@ describe("searchRelatedFileNames(): ", () => {
   });
 });
 
-describe("calculateSimilarity(): ", () => {
-  it("returns high similarity for substring matches", () => {
+describe("calculateSimilarity()", () => {
+  it("Matches substrings", () => {
     expect(calculateSimilarity("menu", "menu-alt")).toBe(0.8);
     expect(calculateSimilarity("arrow", "arrow-left")).toBe(0.8);
     expect(calculateSimilarity("home", "home-filled")).toBe(0.8);
   });
 
-  it("returns partial similarity for common words in hyphenated strings", () => {
+  it("Matches common words", () => {
     expect(calculateSimilarity("arrow-right", "arrow-left")).toBeCloseTo(0.65);
     expect(calculateSimilarity("menu-alt", "menu-alternative")).toBeCloseTo(0.8);
     expect(calculateSimilarity("home-filled", "home-outline")).toBeCloseTo(0.65);
   });
 
-  it("returns character-based similarity for strings with no common words", () => {
+  it("Matches similar characters", () => {
     expect(calculateSimilarity("menu", "menue")).toBeCloseTo(0.8);
     expect(calculateSimilarity("arrow", "below")).toBeLessThan(0.5);
     expect(calculateSimilarity("home", "dome")).toBeCloseTo(0.75);
   });
 
-  it("handles case insensitive comparison", () => {
+  it("Handles case insensitive", () => {
     expect(calculateSimilarity("MENU", "menu-alt")).toBe(0.8);
     expect(calculateSimilarity("Arrow-Left", "arrow-left")).toBe(0.8);
     expect(calculateSimilarity("HOME", "home")).toBe(0.8);
   });
 
-  it("handles empty strings", () => {
+  it("Handles empty strings", () => {
     expect(calculateSimilarity("", "test")).toBe(0);
     expect(calculateSimilarity("test", "")).toBe(0);
     expect(calculateSimilarity("", "")).toBe(0);
   });
 });
 
-describe("readConfig(): ", () => {
+describe("readConfig()", () => {
   beforeEach(() => {
     jest.spyOn(fs, "existsSync").mockImplementation();
     jest.spyOn(fs, "readFileSync").mockImplementation();
@@ -388,7 +391,7 @@ describe("readConfig(): ", () => {
     jest.restoreAllMocks();
   });
 
-  it("returns parsed config when file exists", () => {
+  it("Parses existing config", () => {
     const mockConfig = {
       platform: "native",
       outputPath: "src/icons",
@@ -401,20 +404,20 @@ describe("readConfig(): ", () => {
     expect(readConfig()).toEqual(mockConfig);
   });
 
-  it("returns null when config file doesn't exist", () => {
+  it("Returns null when no config", () => {
     (fs.existsSync as jest.Mock).mockReturnValue(false);
 
     expect(readConfig()).toBeNull();
   });
 
-  it("returns null when config file is invalid JSON", () => {
+  it("Returns null for invalid JSON", () => {
     (fs.existsSync as jest.Mock).mockReturnValue(true);
     (fs.readFileSync as jest.Mock).mockReturnValue("invalid json");
 
     expect(readConfig()).toBeNull();
   });
 
-  it("returns null when read operation fails", () => {
+  it("Returns null on read error", () => {
     (fs.existsSync as jest.Mock).mockReturnValue(true);
     (fs.readFileSync as jest.Mock).mockImplementation(() => {
       throw new Error("Read failed");
@@ -424,23 +427,23 @@ describe("readConfig(): ", () => {
   });
 });
 
-describe("getReactNativeExportLine(): ", () => {
-  it("generates export line for React Native", () => {
+describe("getReactNativeExportLine()", () => {
+  it("Generates export line for React Native", () => {
     expect(getReactNativeExportLine("home")).toBe('export * from "./home";');
     expect(getReactNativeExportLine("arrow-left")).toBe('export * from "./arrow-left";');
     expect(getReactNativeExportLine("4k-box")).toBe('export * from "./4k-box";');
   });
 });
 
-describe("getReactExportLine(): ", () => {
-  it("generates export line for React with PascalCase icon name", () => {
+describe("getReactExportLine()", () => {
+  it("Generates export line for React with PascalCase icon name", () => {
     expect(getReactExportLine("home")).toBe('export { HomeIcon } from "./home";');
     expect(getReactExportLine("arrow-left")).toBe('export { ArrowLeftIcon } from "./arrow-left";');
     expect(getReactExportLine("4k-box")).toBe('export { FourKBoxIcon } from "./4k-box";');
   });
 });
 
-describe("ensureIndexFile(): ", () => {
+describe("ensureIndexFile()", () => {
   beforeEach(() => {
     jest.spyOn(fs, "existsSync").mockImplementation();
     jest.spyOn(fs, "mkdirSync").mockImplementation();
@@ -451,7 +454,7 @@ describe("ensureIndexFile(): ", () => {
     jest.restoreAllMocks();
   });
 
-  it("creates directory and index file for React Native", () => {
+  it("Creates directory and index file for React Native", () => {
     const config: JsonConfig = {
       platform: "native" as Platform,
       outputPath: "src/icons",
@@ -470,7 +473,7 @@ describe("ensureIndexFile(): ", () => {
     );
   });
 
-  it("creates directory and index file for React", () => {
+  it("Creates directory and index file for React", () => {
     const config: JsonConfig = {
       platform: "react" as Platform,
       outputPath: "src/icons",
@@ -486,7 +489,7 @@ describe("ensureIndexFile(): ", () => {
     );
   });
 
-  it("skips creation if index file exists", () => {
+  it("Skips creation if index file exists", () => {
     const config: JsonConfig = {
       platform: "react" as Platform,
       outputPath: "src/icons",
@@ -500,7 +503,7 @@ describe("ensureIndexFile(): ", () => {
   });
 });
 
-describe("appendIconExport(): ", () => {
+describe("appendIconExport()", () => {
   const nativeConfig: JsonConfig = {
     platform: "native" as Platform,
     outputPath: "src/icons",
@@ -520,7 +523,7 @@ describe("appendIconExport(): ", () => {
     jest.restoreAllMocks();
   });
 
-  it("appends React Native export if not exists", () => {
+  it("Appends React Native export if not exists", () => {
     (fs.readFileSync as jest.Mock).mockReturnValue("existing content");
 
     appendIconExport(nativeConfig, "home");
@@ -531,7 +534,7 @@ describe("appendIconExport(): ", () => {
     );
   });
 
-  it("appends React export if not exists", () => {
+  it("Appends React export if not exists", () => {
     (fs.readFileSync as jest.Mock).mockReturnValue("existing content");
 
     appendIconExport(reactConfig, "home");
@@ -542,7 +545,7 @@ describe("appendIconExport(): ", () => {
     );
   });
 
-  it("skips if export already exists", () => {
+  it("Skips if export already exists", () => {
     (fs.readFileSync as jest.Mock).mockReturnValue('export { HomeIcon } from "./home";');
 
     appendIconExport(reactConfig, "home");
@@ -551,7 +554,7 @@ describe("appendIconExport(): ", () => {
   });
 });
 
-describe("iconFileExists(): ", () => {
+describe("iconFileExists()", () => {
   const config: JsonConfig = {
     platform: "react" as Platform,
     outputPath: "src/icons",
@@ -565,21 +568,21 @@ describe("iconFileExists(): ", () => {
     jest.restoreAllMocks();
   });
 
-  it("returns true when icon file exists", () => {
+  it("Returns true when icon file exists", () => {
     (fs.existsSync as jest.Mock).mockReturnValue(true);
 
     expect(iconFileExists(config, "home")).toBe(true);
     expect(fs.existsSync).toHaveBeenCalledWith(path.join(process.cwd(), "src/icons/home.tsx"));
   });
 
-  it("returns false when icon file doesn't exist", () => {
+  it("Returns false when icon file doesn't exist", () => {
     (fs.existsSync as jest.Mock).mockReturnValue(false);
 
     expect(iconFileExists(config, "nonexistent")).toBe(false);
   });
 });
 
-describe("generateIconComponent(): ", () => {
+describe("generateIconComponent()", () => {
   beforeEach(() => {
     jest.spyOn(fs, "existsSync").mockImplementation();
     jest.spyOn(fs, "readFileSync").mockImplementation();
@@ -592,7 +595,7 @@ describe("generateIconComponent(): ", () => {
     jest.restoreAllMocks();
   });
 
-  it("generates new React component successfully", async () => {
+  it("Generates React component", async () => {
     const config: JsonConfig = {
       platform: "react" as Platform,
       outputPath: "src/icons",
@@ -614,7 +617,7 @@ describe("generateIconComponent(): ", () => {
     );
   });
 
-  it("generates new React Native component successfully", async () => {
+  it("Generates React Native component", async () => {
     const config: JsonConfig = {
       platform: "native" as Platform,
       outputPath: "src/icons",
@@ -636,7 +639,7 @@ describe("generateIconComponent(): ", () => {
     );
   });
 
-  it("throws error when SVG has no paths", async () => {
+  it("Throws on missing paths", async () => {
     const config: JsonConfig = {
       platform: "react" as Platform,
       outputPath: "src/icons",
@@ -652,5 +655,39 @@ describe("generateIconComponent(): ", () => {
     await expect(generateIconComponent(config, "home", "path/to/home.svg")).rejects.toThrow(
       "Failed to extract path data from home"
     );
+  });
+});
+
+describe("printInitSuccess()", () => {
+  let consoleLogSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
+  });
+
+  afterEach(() => {
+    consoleLogSpy.mockRestore();
+  });
+
+  it("Prints formatted success message", () => {
+    const config: JsonConfig = {
+      platform: "web",
+      outputPath: "src/components/icons"
+    };
+
+    printInitSuccess(config);
+
+    expect(consoleLogSpy).toHaveBeenCalledWith("");
+    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"), "Thanks for choosing pix31 to manage your pixelarticons");
+    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"));
+    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"), "You should be set up to start using pix31 now!");
+    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"));
+    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"), "We have added a couple of things to help you out:");
+    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"), `- ${CONFIG_FILE_NAME} contains your icon configuration`);
+    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"), `- ${config.outputPath} will contain your icon components`);
+    expect(consoleLogSpy).toHaveBeenCalledWith("");
+    expect(consoleLogSpy).toHaveBeenCalledWith("Commands you can run:");
+    expect(consoleLogSpy).toHaveBeenCalledWith(`  npx ${LIB_NAME} browse                     Open pixelarticons website in browser`);
+    expect(consoleLogSpy).toHaveBeenCalledWith(`  npx ${LIB_NAME} add [icon-1] [icon-2] ...  Add icons to your project`);
   });
 });

@@ -1,7 +1,9 @@
 /** @type {import('jest').Config} */
-export default {
+module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
+  silent: true,
+  verbose: true,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   testMatch: [
     "**/__tests__/**/*.[jt]s?(x)",
@@ -14,7 +16,8 @@ export default {
   },
   moduleNameMapper: {
     '^@lib/(.*)$': '<rootDir>/src/lib/$1',
-    '@commands/(.*)': '<rootDir>/src/commands/$1'
+    '@commands/(.*)': '<rootDir>/src/commands/$1',
+    '^ora$': '<rootDir>/__mocks__/ora.js'
   },
   roots: ['<rootDir>/src'],
   modulePathIgnorePatterns: ['<rootDir>/dist/'],
@@ -24,5 +27,5 @@ export default {
   transformIgnorePatterns: [
     'node_modules/(?!(ora|chalk|prompts)/)'
   ],
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js']
+  testTimeout: 10000
 }; 

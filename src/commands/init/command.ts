@@ -1,4 +1,4 @@
-import { CONFIG_FILE_NAME, LIB_NAME, PLATFORMS } from "@lib/constants";
+import { CONFIG_FILE_NAME, PLATFORMS } from "@lib/constants";
 import { JsonConfig, Platform } from "@lib/types";
 import chalk from "chalk";
 import { Command } from "commander";
@@ -7,8 +7,11 @@ import fs from "fs";
 import ora from "ora";
 import prompts from "prompts";
 import { execSync } from "child_process";
+import { printInitSuccess } from "@lib/utils";
 
-export const getConfigPath = (): string => path.join(process.cwd(), CONFIG_FILE_NAME);
+export const getConfigPath = (): string => {
+  return path.join(process.cwd(), CONFIG_FILE_NAME);
+};
 
 export const init = new Command()
   .name("init")
@@ -148,11 +151,7 @@ export async function initializeConfig(): Promise<JsonConfig | null> {
     };
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-
-    console.log("");
-    console.log("Commands you can run:");
-    console.log(`  npx ${LIB_NAME} add [icon-name]   Add icons to your project`);
-
+    printInitSuccess(config);
     return config;
   } catch (error) {
     console.error(chalk.red("Failed to initialize config:"), error);
