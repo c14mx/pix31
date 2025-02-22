@@ -296,13 +296,14 @@ describe("getSvgFiles()", () => {
 
     const result = getSvgFiles();
 
-    // Verify it filters non-svg files and returns full paths
+    const mockSvgPaths = [
+      path.join(process.cwd(), "node_modules/pixelarticons/icon1.svg"),
+      path.join(process.cwd(), "node_modules/pixelarticons/icon2.svg"),
+      path.join(process.cwd(), "node_modules/pixelarticons/icon3.svg"),
+    ];
+
     expect(result).toHaveLength(3);
-    expect(result).toEqual([
-      path.join(__dirname, "../../pixelarticons/icon1.svg"),
-      path.join(__dirname, "../../pixelarticons/icon2.svg"),
-      path.join(__dirname, "../../pixelarticons/icon3.svg"),
-    ]);
+    expect(result).toEqual(mockSvgPaths);
   });
 
   it("Returns empty array when no SVGs", () => {

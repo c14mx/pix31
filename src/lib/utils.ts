@@ -115,8 +115,7 @@ ${componentName}.displayName = "${componentName}";
 }
 
 export function getSvgFiles(): string[] {
-  const packageRoot = path.join(__dirname, "..");
-  const svgDir = path.join(packageRoot, "pixelarticons");
+  const svgDir = path.join(process.cwd(), "node_modules", "pixelarticons");
 
   try {
     return fs
@@ -125,7 +124,7 @@ export function getSvgFiles(): string[] {
       .map((file) => path.join(svgDir, file));
   } catch (error) {
     throw new Error(
-      `Failed to find SVG files in ${svgDir}. Please ensure the package is installed correctly.`
+      "Failed to find SVG files. Please install pixelarticons package with: npm install pixelarticons"
     );
   }
 }
