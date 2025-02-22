@@ -20,7 +20,7 @@
     "version": "changeset version",
     "release": "npm run build && changeset publish"
   },
-  "name": "pix31",
+  "name": "@c14mx/pix31",
   "version": "1.0.0",
   "main": "dist/cli.js",
   "module": "dist/cli.mjs",
