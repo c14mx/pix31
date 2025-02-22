@@ -1,20 +1,16 @@
-name: Publish
+name: Release
 
 on:
   push:
-    branches: [main]
-
-permissions:
-  contents: write
-  pull-requests: write
-
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+    branches:
+      - main
 
 jobs:
-  publish:
+  release:
+    name: Release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout Repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -22,29 +18,23 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 18
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
-
-      - name: Verify package contents
-        run: |
-          ls -la dist/
-          cat package.json
-          npm pack --dry-run
-
-      - name: Setup npm authentication
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-
       - name: Create Release Pull Request or Publish
+        id: changesets
         uses: changesets/action@v1
         with:
-          publish: npm publish
+          # This will create a PR when changesets are present
+          publish: npm run release
+          # This commits the version changes
+          version: npm run version
+          # This is your npm token
+          commit: "chore: version packages"
+          title: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
