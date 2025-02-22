@@ -115,7 +115,7 @@ ${componentName}.displayName = "${componentName}";
 }
 
 export function getSvgFiles(): string[] {
-  const svgDir = path.join(process.cwd(), "node_modules", "pixelarticons");
+  const svgDir = path.join(process.cwd(), "node_modules", "pixelarticons", "svg");
 
   try {
     return fs
@@ -124,7 +124,7 @@ export function getSvgFiles(): string[] {
       .map((file) => path.join(svgDir, file));
   } catch (error) {
     throw new Error(
-      "Failed to find SVG files. Please install pixelarticons package with: npm install pixelarticons"
+      "Failed to find SVG files. This is likely a bug in pix31 - please report it on GitHub."
     );
   }
 }
@@ -276,7 +276,7 @@ export async function generateReactIcons(): Promise<GenerationStats> {
     failedFiles: [],
   };
 
-  const svgDir = path.resolve("pixelarticons");
+  const svgDir = path.resolve("node_modules/pixelarticons/svg");
   const outputDir = path.resolve("react-icons");
 
   if (!fs.existsSync(outputDir)) {
