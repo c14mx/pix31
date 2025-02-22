@@ -1,5 +1,11 @@
 # @c14mx/pix31
 
+## 1.0.2
+
+### Patch Changes
+
+- 11ad63c: Added GitHub Actions workflow for automated releases using changesets
+
 ## 1.0.1
 
 ### Patch Changes
