@@ -12,6 +12,7 @@
     "dev": "tsc -w",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "npm run build && changeset publish --access public"
@@ -99,5 +100,8 @@
   "bugs": {
     "url": "https://github.com/c14mx/pix31/issues"
   },
-  "homepage": "https://github.com/c14mx/pix31#readme"
+  "homepage": "https://github.com/c14mx/pix31#readme",
+  "publishConfig": {
+    "access": "public"
+  }
 }
