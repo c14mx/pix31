@@ -169,7 +169,7 @@ describe("initializeConfig()", () => {
     (fs.readFileSync as jest.Mock).mockReturnValue(JSON.stringify(mockPackageJson));
   });
 
-  it("Installs react-native-svg for React Native", async () => {
+  it("Installs react-native-svg and pixelarticons for React Native", async () => {
     (fs.readFileSync as jest.Mock)
       .mockReturnValueOnce(JSON.stringify({ dependencies: { "react-native": "0.70.0" } }))
       .mockReturnValueOnce(JSON.stringify({ dependencies: {} }));
@@ -178,10 +178,13 @@ describe("initializeConfig()", () => {
 
     await initializeConfig();
 
-    expect(execSync).toHaveBeenCalledWith("npm install react-native-svg", expect.any(Object));
+    expect(execSync).toHaveBeenCalledWith(
+      "npm install react-native-svg pixelarticons", 
+      expect.any(Object)
+    );
   });
 
-  it("Installs Tailwind deps for React projects", async () => {
+  it("Installs Tailwind deps and pixelarticons for React projects", async () => {
     (fs.readFileSync as jest.Mock)
       .mockReturnValueOnce(JSON.stringify({ dependencies: { react: "18.0.0" } }))
       .mockReturnValueOnce(JSON.stringify({ dependencies: {} }));
@@ -191,7 +194,7 @@ describe("initializeConfig()", () => {
     await initializeConfig();
 
     expect(execSync).toHaveBeenCalledWith(
-      "npm install tailwind-merge tailwindcss-animate",
+      "npm install tailwind-merge tailwindcss-animate pixelarticons",
       expect.any(Object)
     );
     expect(execSync).toHaveBeenCalledWith("npm install -D tailwindcss", expect.any(Object));
@@ -203,6 +206,7 @@ describe("initializeConfig()", () => {
         react: "18.0.0",
         "tailwind-merge": "1.0.0",
         "tailwindcss-animate": "1.0.0",
+        "pixelarticons": "1.7.0"
       },
       devDependencies: {
         tailwindcss: "3.0.0",

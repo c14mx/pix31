@@ -62,13 +62,18 @@ function checkPackageExists(packageName: string): boolean {
 
 async function installDependencies(platform: "web" | "native"): Promise<void> {
   if (platform === "native") {
-    if (!checkPackageExists("react-native-svg")) {
-      const spinner = ora("Installing react-native-svg...").start();
+    const missingDeps = [];
+    
+    if (!checkPackageExists("react-native-svg")) missingDeps.push("react-native-svg");
+    if (!checkPackageExists("pixelarticons")) missingDeps.push("pixelarticons");
+
+    if (missingDeps.length > 0) {
+      const spinner = ora(`Installing dependencies: ${missingDeps.join(", ")}...`).start();
       try {
-        execSync("npm install react-native-svg", { stdio: "pipe" });
-        spinner.succeed("Installed react-native-svg");
+        execSync(`npm install ${missingDeps.join(" ")}`, { stdio: "pipe" });
+        spinner.succeed("Installed dependencies");
       } catch (error) {
-        spinner.fail("Failed to install react-native-svg");
+        spinner.fail("Failed to install dependencies");
         throw error;
       }
     }
@@ -78,6 +83,7 @@ async function installDependencies(platform: "web" | "native"): Promise<void> {
 
     if (!checkPackageExists("tailwind-merge")) missingDeps.push("tailwind-merge");
     if (!checkPackageExists("tailwindcss-animate")) missingDeps.push("tailwindcss-animate");
+    if (!checkPackageExists("pixelarticons")) missingDeps.push("pixelarticons");
     if (!checkPackageExists("tailwindcss")) missingDevDeps.push("tailwindcss");
 
     if (missingDeps.length > 0) {

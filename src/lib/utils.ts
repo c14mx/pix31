@@ -124,7 +124,7 @@ export function getSvgFiles(): string[] {
       .map((file) => path.join(svgDir, file));
   } catch (error) {
     throw new Error(
-      "Failed to find SVG files. Please install pixelarticons package with: npm install pixelarticons"
+      "Failed to find SVG files. This is likely a bug in pix31 - please report it on GitHub."
     );
   }
 }
