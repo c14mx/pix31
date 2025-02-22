@@ -1,10 +1,17 @@
 # @c14mx/pix31
 
-## 1.0.7
+## 1.0.8
 
 ### Patch Changes
 
 - Fixing `add` command. Getting `Error: ENOENT: no such file or directory...`
+- `pixelarticons` package is now a dependency and not a local directory
+
+## 1.0.7
+
+### Patch Changes
+
+- Attempted** to fix `add` command.
 
 ## 1.0.6
 
