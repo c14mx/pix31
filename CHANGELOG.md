@@ -1,5 +1,11 @@
 # @c14mx/pix31
 
+## 1.0.6
+
+### Patch Changes
+
+- bd1671f: Trying to fix npm release on main merge
+
 ## 1.0.5
 
 ### Patch Changes
