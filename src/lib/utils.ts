@@ -115,7 +115,7 @@ ${componentName}.displayName = "${componentName}";
 }
 
 export function getSvgFiles(): string[] {
-  const svgDir = path.join(process.cwd(), "node_modules", "pixelarticons");
+  const svgDir = path.join(process.cwd(), "node_modules", "pixelarticons", "svg");
 
   try {
     return fs
@@ -276,7 +276,7 @@ export async function generateReactIcons(): Promise<GenerationStats> {
     failedFiles: [],
   };
 
-  const svgDir = path.resolve("pixelarticons");
+  const svgDir = path.resolve("node_modules/pixelarticons/svg");
   const outputDir = path.resolve("react-icons");
 
   if (!fs.existsSync(outputDir)) {

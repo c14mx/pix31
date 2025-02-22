@@ -12,7 +12,8 @@
     "dev": "tsc -w",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "publish": "npm publish --access public"
   },
   "name": "pix31",
   "version": "1.0.8",

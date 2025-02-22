@@ -297,9 +297,9 @@ describe("getSvgFiles()", () => {
     const result = getSvgFiles();
 
     const mockSvgPaths = [
-      path.join(process.cwd(), "node_modules/pixelarticons/icon1.svg"),
-      path.join(process.cwd(), "node_modules/pixelarticons/icon2.svg"),
-      path.join(process.cwd(), "node_modules/pixelarticons/icon3.svg"),
+      path.join(process.cwd(), "node_modules/pixelarticons/svg/icon1.svg"),
+      path.join(process.cwd(), "node_modules/pixelarticons/svg/icon2.svg"),
+      path.join(process.cwd(), "node_modules/pixelarticons/svg/icon3.svg"),
     ];
 
     expect(result).toHaveLength(3);
