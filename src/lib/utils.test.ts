@@ -671,10 +671,13 @@ describe("printInitSuccess()", () => {
     printInitSuccess();
 
     expect(consoleLogSpy).toHaveBeenCalledTimes(5);
-    expect(consoleLogSpy).toHaveBeenNthCalledWith(1, expect.stringContaining("--------------------------------"));
+    expect(consoleLogSpy).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining("--------------------------------")
+    );
     expect(consoleLogSpy).toHaveBeenNthCalledWith(2, expect.any(String), "Commands you can run:");
     expect(consoleLogSpy).toHaveBeenNthCalledWith(
-      3, 
+      3,
       expect.any(String),
       `npx ${LIB_NAME} browse                     Search pixelarticons website`
     );
@@ -683,6 +686,9 @@ describe("printInitSuccess()", () => {
       expect.any(String),
       `npx ${LIB_NAME} add [icon-1] [icon-2] ...  Add icons to your project`
     );
-    expect(consoleLogSpy).toHaveBeenNthCalledWith(5, expect.stringContaining("--------------------------------"));
+    expect(consoleLogSpy).toHaveBeenNthCalledWith(
+      5,
+      expect.stringContaining("--------------------------------")
+    );
   });
 });
