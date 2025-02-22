@@ -672,22 +672,41 @@ describe("printInitSuccess()", () => {
   it("Prints formatted success message", () => {
     const config: JsonConfig = {
       platform: "web",
-      outputPath: "src/components/icons"
+      outputPath: "src/components/icons",
     };
 
     printInitSuccess(config);
 
     expect(consoleLogSpy).toHaveBeenCalledWith("");
-    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"), "Thanks for choosing pix31 to manage your pixelarticons");
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      chalk.cyan("info"),
+      "Thanks for choosing pix31 to manage your pixelarticons"
+    );
     expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"));
-    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"), "You should be set up to start using pix31 now!");
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      chalk.cyan("info"),
+      "You should be set up to start using pix31 now!"
+    );
     expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"));
-    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"), "We have added a couple of things to help you out:");
-    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"), `- ${CONFIG_FILE_NAME} contains your icon configuration`);
-    expect(consoleLogSpy).toHaveBeenCalledWith(chalk.cyan("info"), `- ${config.outputPath} will contain your icon components`);
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      chalk.cyan("info"),
+      "We have added a couple of things to help you out:"
+    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      chalk.cyan("info"),
+      `- ${CONFIG_FILE_NAME} contains your icon configuration`
+    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      chalk.cyan("info"),
+      `- ${config.outputPath} will contain your icon components`
+    );
     expect(consoleLogSpy).toHaveBeenCalledWith("");
     expect(consoleLogSpy).toHaveBeenCalledWith("Commands you can run:");
-    expect(consoleLogSpy).toHaveBeenCalledWith(`  npx ${LIB_NAME} browse                     Open pixelarticons website in browser`);
-    expect(consoleLogSpy).toHaveBeenCalledWith(`  npx ${LIB_NAME} add [icon-1] [icon-2] ...  Add icons to your project`);
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      `  npx ${LIB_NAME} browse                     Open pixelarticons website in browser`
+    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      `  npx ${LIB_NAME} add [icon-1] [icon-2] ...  Add icons to your project`
+    );
   });
 });
