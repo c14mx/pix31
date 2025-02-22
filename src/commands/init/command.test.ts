@@ -179,7 +179,7 @@ describe("initializeConfig()", () => {
     await initializeConfig();
 
     expect(execSync).toHaveBeenCalledWith(
-      "npm install react-native-svg pixelarticons", 
+      "npm install react-native-svg pixelarticons",
       expect.any(Object)
     );
   });
@@ -206,7 +206,7 @@ describe("initializeConfig()", () => {
         react: "18.0.0",
         "tailwind-merge": "1.0.0",
         "tailwindcss-animate": "1.0.0",
-        "pixelarticons": "1.7.0"
+        pixelarticons: "1.7.0",
       },
       devDependencies: {
         tailwindcss: "3.0.0",

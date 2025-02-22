@@ -63,7 +63,7 @@ function checkPackageExists(packageName: string): boolean {
 async function installDependencies(platform: "web" | "native"): Promise<void> {
   if (platform === "native") {
     const missingDeps = [];
-    
+
     if (!checkPackageExists("react-native-svg")) missingDeps.push("react-native-svg");
     if (!checkPackageExists("pixelarticons")) missingDeps.push("pixelarticons");
 
