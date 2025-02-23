@@ -3,6 +3,13 @@ import fs from "fs";
 import prompts from "prompts";
 import { initializeConfig } from "./command";
 import { CONFIG_FILE_NAME, LIB_NAME } from "../../lib/constants";
+import { jest, describe, it, expect, beforeEach } from "@jest/globals";
+
+type PromptResponse = {
+  platform?: "web" | "native";
+  outputPath?: string | null;
+  overwrite?: boolean;
+};
 
 type OraMock = {
   start: () => OraMock;
@@ -11,30 +18,40 @@ type OraMock = {
   fail: () => OraMock;
 };
 
-jest.mock("fs");
+jest.mock("fs", () => ({
+  existsSync: jest.fn(),
+  writeFileSync: jest.fn(),
+  readFileSync: jest.fn(),
+}));
+
 jest.mock("prompts");
-jest.mock("child_process");
+const promptsMock = prompts as jest.MockedFunction<typeof prompts>;
+
+jest.mock("child_process", () => ({
+  execSync: jest.fn(),
+}));
+
 jest.mock("ora", () => ({
   __esModule: true,
-  default: (): OraMock => ({
+  default: jest.fn().mockImplementation(() => ({
     start: jest.fn().mockReturnThis(),
     stop: jest.fn().mockReturnThis(),
     succeed: jest.fn().mockReturnThis(),
     fail: jest.fn().mockReturnThis(),
-  }),
+  })),
 }));
 
 describe(`npx ${LIB_NAME} init`, () => {
   beforeEach((): void => {
     jest.clearAllMocks();
+    promptsMock.mockImplementation(() => Promise.resolve({}));
   });
 
   it("Creates pix31.json config with custom output path", async () => {
     (fs.existsSync as jest.Mock).mockReturnValue(false);
     (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
 
-    const mockPrompts = prompts as unknown as jest.Mock;
-    mockPrompts
+    promptsMock
       .mockResolvedValueOnce({ platform: "web" })
       .mockResolvedValueOnce({ outputPath: "custom/icons/path" });
 
@@ -57,9 +74,7 @@ describe(`npx ${LIB_NAME} init`, () => {
     (fs.existsSync as jest.Mock).mockReturnValue(true);
     (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
 
-    const mockPrompts = prompts as unknown as jest.Mock;
-
-    mockPrompts
+    promptsMock
       .mockResolvedValueOnce({ overwrite: true })
       .mockResolvedValueOnce({ platform: "web" })
       .mockResolvedValueOnce({ outputPath: "src/components/icons" });
@@ -81,15 +96,14 @@ describe(`npx ${LIB_NAME} init`, () => {
 
   it("Prompts for output directory with default value", async () => {
     (fs.existsSync as jest.Mock).mockReturnValue(false);
-    const mockPrompts = prompts as unknown as jest.Mock;
 
-    mockPrompts
+    promptsMock
       .mockResolvedValueOnce({ platform: "web" })
       .mockResolvedValueOnce({ outputPath: "app/components/icons" });
 
     await initializeConfig();
 
-    expect(mockPrompts).toHaveBeenCalledWith(
+    expect(promptsMock).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "text",
         name: "outputPath",
@@ -102,9 +116,8 @@ describe(`npx ${LIB_NAME} init`, () => {
 
   it("Returns null if outputPath is not provided", async () => {
     (fs.existsSync as jest.Mock).mockReturnValue(false);
-    const mockPrompts = prompts as unknown as jest.Mock;
 
-    mockPrompts
+    promptsMock
       .mockResolvedValueOnce({ platform: "web" })
       .mockResolvedValueOnce({ outputPath: null });
 
@@ -122,8 +135,7 @@ describe(`npx ${LIB_NAME} init`, () => {
       })
     );
 
-    const mockPrompts = prompts as unknown as jest.Mock;
-    mockPrompts.mockResolvedValueOnce({ outputPath: "app/components/icons" });
+    promptsMock.mockResolvedValueOnce({ outputPath: "app/components/icons" });
 
     await initializeConfig();
 
@@ -152,8 +164,7 @@ describe(`npx ${LIB_NAME} init`, () => {
       })
     );
 
-    const mockPrompts = prompts as unknown as jest.Mock;
-    mockPrompts.mockResolvedValueOnce({ outputPath: "src/components/icons" });
+    promptsMock.mockResolvedValueOnce({ outputPath: "src/components/icons" });
 
     await initializeConfig();
 
@@ -173,14 +184,13 @@ describe(`npx ${LIB_NAME} init`, () => {
   it("Prompts for framework when package.json not found", async () => {
     (fs.existsSync as jest.Mock).mockReturnValueOnce(false).mockReturnValueOnce(false);
 
-    const mockPrompts = prompts as unknown as jest.Mock;
-    mockPrompts
+    promptsMock
       .mockResolvedValueOnce({ platform: "web" })
       .mockResolvedValueOnce({ outputPath: "src/components/icons" });
 
     await initializeConfig();
 
-    expect(mockPrompts).toHaveBeenCalledWith(
+    expect(promptsMock).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "select",
         name: "platform",
@@ -206,8 +216,7 @@ describe("initializeConfig()", () => {
       .mockReturnValueOnce(JSON.stringify({ dependencies: { "react-native": "0.70.0" } }))
       .mockReturnValueOnce(JSON.stringify({ dependencies: {} }));
 
-    const mockPrompts = prompts as unknown as jest.Mock;
-    mockPrompts
+    promptsMock
       .mockResolvedValueOnce({ platform: "native" })
       .mockResolvedValueOnce({ outputPath: "app/components/icons" });
 
@@ -224,10 +233,9 @@ describe("initializeConfig()", () => {
       .mockReturnValueOnce(JSON.stringify({ dependencies: { react: "18.0.0" } }))
       .mockReturnValueOnce(JSON.stringify({ dependencies: {} }));
 
-    const mockPrompts = prompts as unknown as jest.Mock;
-    mockPrompts
-      .mockResolvedValueOnce({ platform: "web" })
-      .mockResolvedValueOnce({ outputPath: "app/components/icons" });
+    promptsMock
+      .mockResolvedValueOnce({ platform: "web" } as PromptResponse)
+      .mockResolvedValueOnce({ outputPath: "app/components/icons" } as PromptResponse);
 
     await initializeConfig();
 
@@ -253,10 +261,9 @@ describe("initializeConfig()", () => {
 
     (fs.readFileSync as jest.Mock).mockReturnValue(JSON.stringify(fullPackageJson));
 
-    const mockPrompts = prompts as unknown as jest.Mock;
-    mockPrompts
-      .mockResolvedValueOnce({ platform: "web" })
-      .mockResolvedValueOnce({ outputPath: "app/components/icons" });
+    promptsMock
+      .mockResolvedValueOnce({ platform: "web" } as PromptResponse)
+      .mockResolvedValueOnce({ outputPath: "app/components/icons" } as PromptResponse);
 
     await initializeConfig();
 

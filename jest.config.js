@@ -1,6 +1,6 @@
 /** @type {import('jest').Config} */
-module.exports = {
-  preset: 'ts-jest',
+export default {
+  preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   silent: true,
   verbose: true,
@@ -11,7 +11,8 @@ module.exports = {
   ],
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: 'tsconfig.json'
+      tsconfig: 'tsconfig.json',
+      useESM: true
     }]
   },
   moduleNameMapper: {
@@ -19,6 +20,7 @@ module.exports = {
     '@commands/(.*)': '<rootDir>/src/commands/$1',
     '^ora$': '<rootDir>/src/lib/mocks/ora.js'
   },
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
   roots: ['<rootDir>/src'],
   modulePathIgnorePatterns: ['<rootDir>/dist/'],
   clearMocks: true,
