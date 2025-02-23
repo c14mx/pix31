@@ -1,12 +1,12 @@
-import { CONFIG_FILE_NAME, PLATFORMS } from "@lib/constants.js";
-import { JsonConfig, Platform } from "@lib/types.js";
+import { CONFIG_FILE_NAME, PLATFORMS } from "../../lib/constants.js";
+import { JsonConfig, Platform } from "../../lib/types.js";
 import chalk from "chalk";
 import { Command } from "commander";
 import path from "path";
 import fs from "fs";
 import prompts from "prompts";
 import { execSync } from "child_process";
-import { printInitSuccess } from "@lib/utils.js";
+import { printInitSuccess } from "../../lib/utils.js";
 
 export const getConfigPath = (): string => {
   return path.join(process.cwd(), CONFIG_FILE_NAME);
