@@ -26,7 +26,7 @@ export default {
   resetMocks: true,
   restoreMocks: true,
   transformIgnorePatterns: [
-    'node_modules/(?!(ora|chalk|prompts)/)'
+    'node_modules/(?!(nanospinner|chalk|prompts)/)'
   ],
   testTimeout: 10000
 }; 

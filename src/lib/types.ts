@@ -31,10 +31,10 @@ export interface SVGNode {
   children?: SVGNode[];
 }
 
-export type OraMock = {
-  start: () => OraMock;
-  stop: () => OraMock;
-  succeed: () => OraMock;
-  fail: () => OraMock;
-  info: () => OraMock;
+export type SpinnerMock = {
+  start: () => SpinnerMock;
+  stop: () => SpinnerMock;
+  success: (options?: { text?: string }) => SpinnerMock;
+  error: (options?: { text?: string }) => SpinnerMock;
+  warn: (options?: { text?: string }) => SpinnerMock;
 };
