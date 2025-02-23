@@ -7,7 +7,7 @@
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "prebuild": "rm -rf dist",
-    "build": "tsup src/index.ts src/cli.ts --format cjs,esm --dts --clean --treeshake --sourcemap",
+    "build": "tsup src/index.ts src/cli.ts --format esm --dts --clean --treeshake --sourcemap --target esnext",
     "postbuild": "chmod +x dist/cli.js",
     "dev": "tsc -w",
     "typecheck": "tsc --noEmit",
@@ -16,7 +16,7 @@
     "publish": "npm publish --access public"
   },
   "name": "pix31",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "private": false,
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -30,13 +30,12 @@
     "enquirer": "^2.4.1",
     "fs-extra": "^11.3.0",
     "open": "^10.1.0",
-    "ora": "6.3.1",
+    "nanospinner": "^1.1.0",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
     "prompts": "^2.4.2",
     "puppeteer": "^24.2.1",
     "svgson": "^5.3.1",
-    "term-img": "^3.0.0",
     "terminal-link": "^3.0.0",
     "pixelarticons": "^1.7.0"
   },
@@ -83,8 +82,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js"
     }
   },
   "repository": {
@@ -97,5 +95,6 @@
   "homepage": "https://github.com/c14mx/pix31#readme",
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "type": "module"
 }

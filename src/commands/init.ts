@@ -1,13 +1,14 @@
-import { CONFIG_FILE_NAME, PLATFORMS } from "@lib/constants";
-import { JsonConfig, Platform } from "@lib/types";
-import chalk from "chalk";
-import { Command } from "commander";
-import path from "path";
 import fs from "fs";
-import ora from "ora";
+import path from "path";
+import chalk from "chalk";
 import prompts from "prompts";
+import { Command } from "commander";
 import { execSync } from "child_process";
+import { createSpinner } from "nanospinner";
+
 import { printInitSuccess } from "@lib/utils";
+import { JsonConfig, Platform } from "@lib/types";
+import { CONFIG_FILE_NAME, PLATFORMS } from "@lib/constants";
 
 export const getConfigPath = (): string => {
   return path.join(process.cwd(), CONFIG_FILE_NAME);
@@ -68,12 +69,14 @@ async function installDependencies(platform: "web" | "native"): Promise<void> {
     if (!checkPackageExists("pixelarticons")) missingDeps.push("pixelarticons");
 
     if (missingDeps.length > 0) {
-      const spinner = ora(`Installing dependencies: ${missingDeps.join(", ")}...`).start();
+      const spinner = createSpinner(
+        `Installing dependencies: ${missingDeps.join(", ")}...`
+      ).start();
       try {
         execSync(`npm install ${missingDeps.join(" ")}`, { stdio: "pipe" });
-        spinner.succeed("Installed dependencies");
+        spinner.success({ text: "Installed dependencies" });
       } catch (error) {
-        spinner.fail("Failed to install dependencies");
+        spinner.error({ text: "Failed to install dependencies" });
         throw error;
       }
     }
@@ -87,23 +90,27 @@ async function installDependencies(platform: "web" | "native"): Promise<void> {
     if (!checkPackageExists("tailwindcss")) missingDevDeps.push("tailwindcss");
 
     if (missingDeps.length > 0) {
-      const spinner = ora(`Installing dependencies: ${missingDeps.join(", ")}...`).start();
+      const spinner = createSpinner(
+        `Installing dependencies: ${missingDeps.join(", ")}...`
+      ).start();
       try {
         execSync(`npm install ${missingDeps.join(" ")}`, { stdio: "pipe" });
-        spinner.succeed("Installed dependencies");
+        spinner.success({ text: "Installed dependencies" });
       } catch (error) {
-        spinner.fail("Failed to install dependencies");
+        spinner.error({ text: "Failed to install dependencies" });
         throw error;
       }
     }
 
     if (missingDevDeps.length > 0) {
-      const spinner = ora(`Installing dev dependencies: ${missingDevDeps.join(", ")}...`).start();
+      const spinner = createSpinner(
+        `Installing dev dependencies: ${missingDevDeps.join(", ")}...`
+      ).start();
       try {
         execSync(`npm install -D ${missingDevDeps.join(" ")}`, { stdio: "pipe" });
-        spinner.succeed("Installed dev dependencies");
+        spinner.success({ text: "Installed dev dependencies" });
       } catch (error) {
-        spinner.fail("Failed to install dev dependencies");
+        spinner.error({ text: "Failed to install dev dependencies" });
         throw error;
       }
     }

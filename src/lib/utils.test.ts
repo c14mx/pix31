@@ -1,3 +1,8 @@
+import fs from "fs";
+import path from "path";
+import type { SpyInstance } from "jest-mock";
+import { jest, describe, it, expect, beforeEach, afterEach } from "@jest/globals";
+
 import {
   convertNumberToWord,
   toPascalCase,
@@ -16,11 +21,9 @@ import {
   iconFileExists,
   generateIconComponent,
   printInitSuccess,
-} from "./utils";
-import fs from "fs";
-import path from "path";
-import { JsonConfig, Platform } from "./types";
-import { LIB_NAME } from "./constants";
+} from "@lib/utils";
+import { LIB_NAME } from "@lib/constants";
+import { JsonConfig, Platform } from "@lib/types";
 
 describe("convertNumberToWord()", () => {
   it("Replaces number prefix with word", () => {
@@ -280,7 +283,7 @@ EmptyIcon.displayName = "EmptyIcon";
 
 describe("getSvgFiles()", () => {
   beforeEach(() => {
-    jest.spyOn(fs, "readdirSync").mockImplementation();
+    jest.spyOn(fs, "readdirSync").mockImplementation(() => []);
   });
 
   afterEach(() => {
@@ -381,8 +384,8 @@ describe("calculateSimilarity()", () => {
 
 describe("readConfig()", () => {
   beforeEach(() => {
-    jest.spyOn(fs, "existsSync").mockImplementation();
-    jest.spyOn(fs, "readFileSync").mockImplementation();
+    jest.spyOn(fs, "existsSync").mockImplementation(() => false);
+    jest.spyOn(fs, "readFileSync").mockImplementation(() => "");
   });
 
   afterEach(() => {
@@ -443,9 +446,9 @@ describe("getReactExportLine()", () => {
 
 describe("ensureIndexFile()", () => {
   beforeEach(() => {
-    jest.spyOn(fs, "existsSync").mockImplementation();
-    jest.spyOn(fs, "mkdirSync").mockImplementation();
-    jest.spyOn(fs, "writeFileSync").mockImplementation();
+    jest.spyOn(fs, "existsSync").mockImplementation(() => false);
+    jest.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
+    jest.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
   });
 
   afterEach(() => {
@@ -513,8 +516,8 @@ describe("appendIconExport()", () => {
   };
 
   beforeEach(() => {
-    jest.spyOn(fs, "readFileSync").mockImplementation();
-    jest.spyOn(fs, "appendFileSync").mockImplementation();
+    jest.spyOn(fs, "readFileSync").mockImplementation(() => "");
+    jest.spyOn(fs, "appendFileSync").mockImplementation(() => undefined);
   });
 
   afterEach(() => {
@@ -559,7 +562,7 @@ describe("iconFileExists()", () => {
   };
 
   beforeEach(() => {
-    jest.spyOn(fs, "existsSync").mockImplementation();
+    jest.spyOn(fs, "existsSync").mockImplementation(() => false);
   });
 
   afterEach(() => {
@@ -582,11 +585,11 @@ describe("iconFileExists()", () => {
 
 describe("generateIconComponent()", () => {
   beforeEach(() => {
-    jest.spyOn(fs, "existsSync").mockImplementation();
-    jest.spyOn(fs, "readFileSync").mockImplementation();
-    jest.spyOn(fs, "mkdirSync").mockImplementation();
-    jest.spyOn(fs, "writeFileSync").mockImplementation();
-    jest.spyOn(console, "log").mockImplementation();
+    jest.spyOn(fs, "existsSync").mockImplementation(() => false);
+    jest.spyOn(fs, "readFileSync").mockImplementation(() => "");
+    jest.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
+    jest.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+    jest.spyOn(console, "log").mockImplementation(() => undefined);
   });
 
   afterEach(() => {
@@ -657,10 +660,10 @@ describe("generateIconComponent()", () => {
 });
 
 describe("printInitSuccess()", () => {
-  let consoleLogSpy: jest.SpyInstance;
+  let consoleLogSpy: SpyInstance;
 
   beforeEach(() => {
-    consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
+    consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => undefined);
   });
 
   afterEach(() => {

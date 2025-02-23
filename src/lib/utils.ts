@@ -2,9 +2,10 @@ import fs from "fs";
 import path from "path";
 import chalk from "chalk";
 import prompts from "prompts";
-import { parse as parseSVG } from "svgson";
 import { Command } from "commander";
-import { addCommand } from "../commands/add/command";
+import { parse as parseSVG } from "svgson";
+
+import { addCommand } from "@commands/add";
 
 import {
   CONFIG_FILE_NAME,
