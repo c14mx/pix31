@@ -1,4 +1,4 @@
-import { Platform, JsonConfig } from "./types";
+import { Platform, JsonConfig } from "@lib/types";
 
 export const LIB_NAME = "pix31";
 export const PIXELARTICONS_URL = "https://pixelarticons.com/";

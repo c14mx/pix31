@@ -2,8 +2,6 @@ import chalk from "chalk";
 import * as path from "path";
 import prompts from "prompts";
 
-import { CONFIG_FILE_NAME, LIB_NAME } from "../../lib/constants";
-import { initializeConfig } from "../init/command";
 import {
   readConfig,
   ensureIndexFile,
@@ -14,6 +12,8 @@ import {
   searchRelatedFileNames,
   iconFileExists,
 } from "@lib/utils";
+import { initializeConfig } from "@commands/init";
+import { CONFIG_FILE_NAME, LIB_NAME } from "@lib/constants";
 
 export async function addCommand(icons: string[]): Promise<void> {
   if (!icons.length) {

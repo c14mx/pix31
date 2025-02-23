@@ -1,19 +1,18 @@
 #!/usr/bin/env node
 
-import { Command } from "commander";
-import { configureAddCommand } from "./lib/utils.js";
-import { init } from "./commands/init/command.js";
-import { browse } from "./commands/browse/command.js";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
+import { Command } from "commander";
 import { dirname, join } from "path";
+
+import { init } from "@commands/init";
+import { browse } from "@commands/browse";
+import { configureAddCommand } from "@lib/utils";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const packageJson = JSON.parse(
-  readFileSync(join(__dirname, "../package.json"), "utf-8")
-);
+const packageJson = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));
 
 const program = new Command();
 

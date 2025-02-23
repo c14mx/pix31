@@ -1,5 +1,8 @@
+import fs from "fs";
+import path from "path";
+import type { SpyInstance } from "jest-mock";
 import { jest, describe, it, expect, beforeEach, afterEach } from "@jest/globals";
-import type { SpyInstance } from 'jest-mock';
+
 import {
   convertNumberToWord,
   toPascalCase,
@@ -18,11 +21,9 @@ import {
   iconFileExists,
   generateIconComponent,
   printInitSuccess,
-} from "./utils";
-import fs from "fs";
-import path from "path";
-import { JsonConfig, Platform } from "./types";
-import { LIB_NAME } from "./constants";
+} from "@lib/utils";
+import { LIB_NAME } from "@lib/constants";
+import { JsonConfig, Platform } from "@lib/types";
 
 describe("convertNumberToWord()", () => {
   it("Replaces number prefix with word", () => {
