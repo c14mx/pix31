@@ -7,7 +7,7 @@
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "prebuild": "rm -rf dist",
-    "build": "tsup src/index.ts src/cli.ts --format cjs,esm --dts --clean --treeshake --sourcemap",
+    "build": "tsup src/index.ts src/cli.ts --format esm --dts --clean --treeshake --sourcemap",
     "postbuild": "chmod +x dist/cli.js",
     "dev": "tsc -w",
     "typecheck": "tsc --noEmit",
@@ -83,8 +83,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js"
     }
   },
   "repository": {
@@ -97,5 +96,6 @@
   "homepage": "https://github.com/c14mx/pix31#readme",
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "type": "module"
 }
