@@ -37,8 +37,7 @@
     "puppeteer": "^24.2.1",
     "svgson": "^5.3.1",
     "term-img": "^3.0.0",
-    "terminal-link": "^3.0.0",
-    "pixelarticons": "^1.7.0"
+    "terminal-link": "^3.0.0"
   },
   "devDependencies": {
     "@types/commander": "^2.12.2",

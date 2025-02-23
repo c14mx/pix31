@@ -17,8 +17,7 @@ export default {
   },
   moduleNameMapper: {
     '^@lib/(.*)$': '<rootDir>/src/lib/$1',
-    '@commands/(.*)': '<rootDir>/src/commands/$1',
-    '^ora$': '<rootDir>/src/lib/mocks/ora.js'
+    '@commands/(.*)': '<rootDir>/src/commands/$1'
   },
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   roots: ['<rootDir>/src'],
